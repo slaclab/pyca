@@ -1,0 +1,20 @@
+This directory contains the files related to the Python/EPICS project.
+This project includes a C library (pyca) to permit Python to be a
+native channel access client as well as PyQt library (pycaqt) to
+faciliate integration of PyQt and channel access.
+
+A set of EPICS-aware widgets are provided that can be used in
+designer.  The goal is to approximate the behavior of EDM.  The layout
+and PV associations are made in designer and saved in a .ui file.  The
+"screen" (using EDM terminology) can be executed by using 'pyuic -x
+<uifile>' with no further intervention.  Additional programming isn't
+required.
+
+NOTE: This project is managed using the NPA make system.  Building the
+shared objects requires that some environment variables be set.  If
+you are building independently (not via the larger build), call
+'pyca-make.py' directly.  The general tools build will correctly call
+pyca-make.py for you.
+
+Jason Tiller
+6-16-09

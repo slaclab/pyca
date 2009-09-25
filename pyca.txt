@@ -1,0 +1,457 @@
+This file documents the 'pyca' module that is provided by the pyca.cc
+file.
+
+'pyca' stands for PYthon Channel Access, which represents Python
+bindings for EPICS PV manipulation via channel access.  Essentially,
+it's a way for Python applications to access EPICS PVs.  pyca acts as
+a channel access client.
+
+The pyca module provides a single class, capv (Channel Access Process
+Variable).  The capv class represents a single EPICS process variable
+and its connection to a channel access server (living on some IOC).
+EPICS allows clients to access to PVs purely on a string name basis -
+if you have the PV's name and can access the network (or gateway) on
+which the providing IOC lives, you can access the PV.
+
+The typical operations on a PV are these:
+
+1.  Connect
+
+    Find the IOC providing the named PV and make a network connection
+    to it.
+
+2.  Disconnect
+
+    Break the connection to the providing IOC.
+
+3.  Get
+
+    Retrieve a field of the PV (.VAL, .LLVL, etc.) as well as some
+    metadata about the PV.
+
+4.  Put
+
+    Set a particular field of the PV to a specified value.
+
+5.  Monitor
+
+    Continuously receive PV field information when the PV changes (in
+    the simplest case - an EPICS database designer can change how
+    often a channel is updated).
+
+All operations on a PV are asynchronous - they return immediately and
+then, when the our CA client receives a response from the providing
+IOC, a callback is stimulated in the context of a separate thread.
+There are mechanisms for performing synchronous Get/Put operations,
+but the others utilize callbacks.
+
++-------------+
+| pyca module |
++-------------+
+
+The pyca module provides the following methods:
+
+1.  pyca.initialize()
+
+    Prepares the CA environment and instantiates the singleton
+    structures required for a CA client.  Should always be called
+    first.
+
+2.  pyca.finalize()
+
+    Frees up the static resources.  Should always be called last.
+
+3.  pyca.pend_io( timeout=-1.0 )
+
+    Wait for all pending (awaiting server response) network I/O
+    operations.  If timeout <= 0.0, this will block until all I/O
+    requests are satisfied or an error occurs.  timeout is specified
+    in fractional seconds.
+
+4.  pyca.flush_io()
+
+    Execute all pending I/O requests (get/put PV, etc.).  Returns
+    immediately without waiting for I/O completion.
+
+5.  pyca.pend_event( timeout=-1.0 )
+
+    Process all asynchronous I/O activity for up to 'timeout'
+    seconds.  If timeout <= 0.0, this will block forever or until an
+    error occurs.  This is a useful way to block script execution but
+    allow asynchronous callbacks to be called.
+
+All of these module methods can raise 'pyca.caexc'.
+
+The pyca module provides the following module constants: (Note that
+all of these constants are derived from the underlying CA library's
+constants.)
+
+1.  DBE_VALUE, DBE_LOG, DBE_ALARM
+
+    These are PV masks used to determine what events we want to
+    detect while monitoring a PV:
+
+    DBE_VALUE - notify us when the value exceeds the "monitor
+    deadband."
+
+    DBE_LOG - notify us when when the value exceeds the "archival
+    deadband."
+
+    DBE_ALARM - notify us when the alarm status changes
+
+    You'll use them when you initiate monitoring.
+
+These constant strings are provided in a tuple, pyca.severity, to
+permit translation of alarm state as integers to strings:
+
+2.  pyca.severity.{NO_ALARM, MINOR, MAJOR, INVALID}
+
+    These represent the current alarm state of the PV.
+
+    NO_ALARM - as you'd expect
+
+    MINOR - PV's value has exceeded a minor limit
+
+    MAJOR - PV's value has exceeded a major limit
+
+    INVALID - PV has an invalid value or connection was unsuccessful
+
+These constants are provided in a tuple, pyca.alarm, to permit
+translation of alarm conditions as integers to strings:
+
+3.  pyca.alarm.{*_ALARM}
+
+    Various constant strings (READ_ALARM, HIHI_ALARM, etc.) represent
+    the condition that triggered the alarm.
+
+4.  pyca.epoch
+
+    This represents the number of seconds in the epoch from 1/1/1970
+    to 1/1/1990.  (I don't know why we need this.)
+
+These constant strings are provided in a tuple, pyca.states, for
+translating the return of '.state()' into a string.
+
+5.  pyca.states.{cs_never_conn,cs_prev_conn,cs_conn,cs_closed}
+
+    Various constant strings that represent the state of the PVs
+    connection to the IOC.
+
+These constant strings are provided in a tuple, pyca.errors, for
+translating the argument to callback functions into a string.
+
+5.  pyca.errors.{ECA_*}
+
+    Various constant strings that represent the return status
+    delivered to a callback.
+
+Note that *all* of these strings are also present as module
+attributes.  So, if a constant string 'ECA_NORMAL' exists, there will
+also be a module attribute, pyca.ECA_NORMAL, whose value can be used
+as an index into the tuples.  This is how you can compare various
+enumeration values.
+
++-----------+
+| pyca.capv |
++-----------+
+
+This is the main and only class contained in the pyca module.  This
+class represents the connection to a single PV provided by some IOC.
+All that is required is the name of the PV - the CA client finds the
+IOC providing a PV with that name.
+
+The connection (a "channel") to a PV goes through the following
+states:
+                                             +----------------+  
+                                             v                |  
+                                             Update Received -+  
+                                             ^               /   
+Disconnected                                 |         +----+    
+      |                   +-> MonitorRequested -      /          
+      v                  /                      \    v           
+Conn Requst -> Connected                         +-> Disconnected
+                         \                      /    ^           
+                          +-> Update Request --+     \           
+                                           |          \          
+                                           |           \         
+                                           |            \        
+                                           v             |       
+                                           Update Received       
+
+The upper path is taken when a PV is being monitored - the CA server
+continuously sends unsolicited updates.  The lower path is taken when
+either Get- or Put-ing a PV's value; each update starts as a Request
+from the CA client to the CA server and completes when the CA server
+sends back the requested data (or an error).
+
+All capv instances initially start in the Disconnected state.
+
+These transitions are caused by user activity:
+
+Disconnected -> Conn Reqst
+
+   This occurs when .connect() is called on a capv instance to make a
+   connection to a PV provided on some IOC.
+
+Connected -> Monitor Requested
+
+   This occurs when the user wants to receive automatic updates of a
+   PVs value.  This is initiated via a call to .monitor()
+
+Connected -> Update Request
+
+   This occurs when the user wants to retrieve (.get()) or update
+   (.put()) the value of a PV only once.  This transition is caused by
+   a call to .get() or .put().
+
+* -> Disconnected
+
+   This occurs when the user calls .disconnect() to break the
+   connection for a PV to its CA server.  This can occur at any time.
+
+The following transitions are stimulated asynchronously via callback
+in a separate thread context:
+
+Conn Requst -> Connected
+
+   This occurs when the CA server responds affirmatively to a
+   connection request.  A callback will be stimulated in the capv
+   instance with the method name of '.connection_handler()'.
+
+Monitor Requested -> Update Received
+
+   This occurs the first time an update is received for a PV being
+   monitored.  A callback is stimulated with the name of
+   '.monitor_handler()'.
+
+Update Received -> Update Received
+
+   This occurs the second and all subsequent times the CA server sends
+   an update of a monitored PV.  Again, .monitor_handler() is called.
+
+Update Request -> Update Received
+
+   This occurs when the CA server responds to a client's request for
+   the current value of a PV.  If the request was a .get() request,
+   then capv stimulates the callback named '.getevent_handler()';
+   otherwise it was a .put() request and capv calls
+   '.putevent_handler()'.
+
+pyca.capv member variables:
+
+   data = {}
+
+      This is a dictionary that contains all of the relevant status for
+      this PV.  The dictionary items are as follows:
+
+      data['status']
+         The alarm status of the PV.  
+
+      data['severity']
+         The severity of the PV's current alarm.
+
+      data['value']
+      The last updated value.
+
+      data['secs']
+         Time when record was last processed.
+
+      data['nsec']
+         Fractional seconds when record was last processed.
+
+      data['units']
+         Units for displaying this PV's value.
+
+      data['display_llim']
+      data['display_hlim']
+      data['warn_llim']
+      data['warn_hlim']
+      data['alarm_llim']
+      data['alarm_hlim']
+      data['ctrl_llim']
+      data['ctrl_hlim']
+         Alarm limit boundaries.
+
+      no_str
+         ???
+
+pyca.capv status memthods:
+
+1.  .host()
+
+    A string that is the FQDN of the host of the IOC that is providing
+    the PV.  Also includes the port on which we conncted to the IOC.
+
+2.  .state()
+
+    Returns an enumeration representing the state of the connection to
+    the PV (the "channel").  Will be one of:
+
+    0: cs_never_conn
+
+       This PV has never been connected.
+
+    1: cs_prev_conn
+
+       This PV is not connected but had been previously.
+
+    2: cs_conn
+
+       This PV is currently connected.
+
+    3: cs_closed
+
+       (This never appears to be used.)  The PV isn't connected
+       because the user explicitly disconnected from the IOC.
+
+3.  .count()
+
+    Returns the number of elements in the array supported by the PV
+    connection.  For non-array PVs, this will always be 1.
+
+4.  .type()
+
+    Returns a string indicating the type of field requested of this
+    PV.  Can be:
+
+    "DBF_STRING"
+    "DBF_INT"
+    "DBF_SHORT"
+    "DBF_FLOAT"
+    "DBF_ENUM"
+    "DBF_CHAR"
+    "DBF_LONG"
+    "DBF_DOUBLE"
+    "DBF_NO_ACCESS"
+
+5.  .rwaccess()
+
+    Returns the type of access granted for this channel, expressed as
+    a 2-bit bitfield.  Bit 0 is read access, bit 1 is write access:
+
+    0 = can't read, can't write
+    1 = read, can't write
+    2 = can't read, write
+    3 = read, write
+
+pyca.capv control methods.  Note that only the blocking versions of
+.get_data() and .put_data() actually trigger network communication;
+all the other calls only queue the request.  You must use one of the
+pyca.flush_io(), pyca.pend_io() or pyca.pend_event() methods to cause
+the request to be delivered to an IOC.
+
+1.  .create_channel()
+
+    Initiate a connection to the IOC that provides the PV with this
+    name.  When the server returns a status for this connection, the
+    instance method capv.connection_handler() will be called with the
+    sole argument of True.  When the connection is established, the
+    instance method .state() will return '2' (cs_conn).
+
+    Raises:
+       pyca.pyexc: If the channel was previously opened.
+       pyca.caexc: If the underlying channel access call failed.
+
+2.  .clear_channel()
+
+    Disconnect the channel to the IOC for this PV.  When the PV is
+    actually disconnected, capv.connection_handler() will be called
+    with an argument of False.
+
+    Raises:
+       pyca.pyexc: If the channel was not previously opened.
+       pyca.caexc: If the underlying channel access call failed.
+
+3.  .subscribe_channel( mask, control )
+
+    Place a "monitor" on a previously connected PV.  A "monitor"
+    specifies that the IOC will spontaneously notify us that the PV
+    has changed state.  pyca will then asynchronously call the
+    instance method .monitor_handler() with a single argument of the
+    status of the transfer.
+
+    'mask' specifies what changes should trigger a notification.  It
+    can be a combination of pyca.DBE_VALUE, pyca.DBE_LOG, and
+    pyca.DBE_ALARM.  See their description for more info.
+
+    'control' is a boolean that specifies what information we want
+    when notified of an update.  We always retrieve the PVs status,
+    last-changed timestamp, and its value.  If 'control' is True, we
+    also retrieve the alarm and warning fields.  The specific fields
+    that are updated are:
+
+    value
+    status
+    severity
+    secs
+    nsec
+    units
+    display_llim
+    display_hlim
+    warn_llim
+    warn_hlim
+    alarm_llim
+    alarm_hlim
+    ctrl_llim
+    ctrl_hlim
+    no_str
+
+    These become member variables of the pyca.capv instance.  See
+    above for a description of these fields.
+
+4.  .get_data( control, timeout )
+
+    Retrieve the most recent fields of the connected PV.  'timeout'
+    specifies if the call should block and for how long.  If < 0, then
+    the call returns immediately and the member attributes won't be
+    updated until the callback occurs.  If timeout >= 0, then it
+    specifies the fractional seconds to wait for the IOC to respond.
+
+    When the IOC responds with updated information, the callback
+    'getevent_handler()' will be executed on the PV instance with a
+    single argument of the status of the transfer.
+
+    In the blocking case (timeout >= 0), the callback will not be
+    initiated and the capv instance attributes will have been updated
+    when the call returns.  Note that an exception is raised upon
+    timeout.
+
+    When the callback is initiated, all of the instance member
+    variables (those specified by 'control' - see .subscribe_channel()
+    above) will have been updated.
+
+5.  .put_data( new_value, timeout )
+
+    Update the PV field with a new value.  'timeout' functions the
+    same as in get_data().
+
+pyca.capv methods you can override:
+
+1.  .connection_handler( self, is_connected )
+
+    Called when the connection status of the capv instance changes.
+    'is_connected' is a boolean indicating the new state of the
+    connection.  When a connection is initiated (via
+    'create_channel()'), this method will be called with is_connected
+    set to True.
+
+    When a previously connected PV disconnects, this method will be
+    called with is_connected set to False.
+
+2.  .monitor_handler( self, exception=None )
+
+    Called when the state of the PV changes.  The state change
+    detected is specified by the 'mask' argument to
+    .subscribe_channel().  So, this might be called on alarm changes
+    or value changes.
+
+    The second argument, 'exception', is used to relay an error
+    conditition in the communication itself, not with the underlying
+    PV.
+
+    The items in the instance's 'data' dictionary will be updated with
+    the PV's new status information.
+
+3.  .getevent_handler( self, exception=None )
+
+    Called when an asynchronous retrieval ('get') completes.
