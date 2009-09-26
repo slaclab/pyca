@@ -10,6 +10,10 @@ struct capv {
   PyObject* name;      // PV name
   PyObject* data;      // data dictionary
   PyObject* processor; // user processor function
+  PyObject* connect_cb; // connection callback
+  PyObject* monitor_cb; // monitor callback
+  PyObject* getevt_cb;  // event callback
+  PyObject* putevt_cb;  // event callback
   chid cid;            // channel access ID  
   char* getbuffer;     // buffer for received data
   unsigned getbufsiz;  // received data buffer size
@@ -39,8 +43,8 @@ static PyObject* pyca_caexc = 0;
 
 #define pyca_raise_caexc_pv(function, reason, pvname) { \
   PyErr_Format(pyca_caexc, "error %d (%s) from %s() file %s at line %d PV %s",\
-   reason, ca_message(reason), function, __FILE__, __LINE__, \
-   PyString_AsString(pv->name)); \
+    reason, ca_message(reason), function, __FILE__, __LINE__, \
+    PyString_AsString(pv->name)); \
   return NULL; }
 
 #define pyca_raise_caexc(function, reason) { \
@@ -61,9 +65,12 @@ static PyObject* pyca_caexc = 0;
 // Utility function which decreases refcnt after adding item to dict
 static inline int _pyca_setitem(PyObject* dict, const char* key, PyObject* val)
 {
-  int result = PyDict_SetItemString(dict, key, val);
-  Py_DECREF(val); // Above function increases refcnt for item
-  return result;
+  if (val) {
+    int result = PyDict_SetItemString(dict, key, val);
+    Py_DECREF(val); // Above function increases refcnt for item
+    return result;
+  }
+  return 0;
 }
 
 static PyObject* ok()

@@ -34,14 +34,17 @@ if __name__ == '__main__':
       pv = Pv(pvname)
       pv.connect(connect_timeout)
       pv.get(ctrl, get_timeout)
-      if pv.status == pyca.NO_ALARM:
-        ts = time.localtime(pv.secs+pyca.epoch)
-        tstr = time.strftime("%Y-%m-%d %H:%M:%S", ts)
-        print "%-30s %s.%09d" %(pv.name, tstr, pv.nsec), pv.value
+      if ctrl:
+        print "%-30s " %(pv.name), pv.data
       else:
-        print "%-30s %s %s" %(pv.name, 
-                              pyca.severity[pv.severity],
-                              pyca.alarm[pv.status])
+        if pv.status == pyca.NO_ALARM:
+          ts = time.localtime(pv.secs+pyca.epoch)
+          tstr = time.strftime("%Y-%m-%d %H:%M:%S", ts)
+          print "%-30s %s.%09d" %(pv.name, tstr, pv.nsec), pv.value
+        else:
+          print "%-30s %s %s" %(pv.name, 
+                                pyca.severity[pv.severity],
+                                pyca.alarm[pv.status])
     except pyca.pyexc, e:
       print 'pyca exception: %s' %(e)
     except pyca.caexc, e:

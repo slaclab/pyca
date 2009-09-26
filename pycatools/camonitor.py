@@ -11,6 +11,7 @@ from options import Options
 class monitor(Pv):
   def __init__(self, name):
     Pv.__init__(self, name)
+    self.monitor_cb = self.monitor_handler
 
   def monitor_handler(self, exception=None):
     try:

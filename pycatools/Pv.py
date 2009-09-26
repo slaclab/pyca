@@ -7,21 +7,12 @@ class Pv(pyca.capv):
   def __init__(self, name):
     pyca.capv.__init__(self, name)
     self.__connection_sem = threading.Event()
+    self.connect_cb = self.connection_handler
 
   # Channel access callbacks
   def connection_handler(self, isconnected):
-    print "Connection: is_connected=%d" % isconnected
     if isconnected:
       self.__connection_sem.set()
-
-  def monitor_handler(self, exception=None):
-    pass
-
-  def getevent_handler(self, exception=None):
-    pass
-
-  def putevent_handler(self, exception=None):
-    pass
 
   # Calls to channel access methods
   def connect(self, timeout=-1):
@@ -30,6 +21,8 @@ class Pv(pyca.capv):
       self.__connection_sem.wait(timeout)
       if not self.__connection_sem.isSet():
         raise pyca.pyexc, "connection timedout for PV %s" %(self.name)
+      else:
+        self.__connection_sem.clear()
 
   def disconnect(self):
     self.clear_channel()

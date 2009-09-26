@@ -11,8 +11,6 @@
 #include "putfunctions.hh"
 #include "handlers.hh"
 
-#include <stdio.h>
-
 extern "C" {
   // Python methods for channel access PV types
   static PyObject* create_channel(PyObject* self, PyObject* args)
@@ -236,6 +234,11 @@ extern "C" {
       pyca_raise_pyexc_int("capv_init", "cannot get PV name", pv);
     }
     Py_INCREF(pv->name);
+    pv->processor = 0;
+    pv->connect_cb = 0;
+    pv->monitor_cb = 0;
+    pv->getevt_cb = 0;
+    pv->putevt_cb = 0;
     pv->cid = 0;
     pv->getbuffer = 0;
     pv->getbufsiz = 0;
@@ -301,6 +304,10 @@ extern "C" {
     {"name", T_OBJECT_EX, offsetof(capv, name), 0, "name"},
     {"data", T_OBJECT_EX, offsetof(capv, data), 0, "data"},
     {"processor", T_OBJECT_EX, offsetof(capv, processor), 0, "processor"},
+    {"connect_cb", T_OBJECT_EX, offsetof(capv, connect_cb), 0, "connect_cb"},
+    {"monitor_cb", T_OBJECT_EX, offsetof(capv, monitor_cb), 0, "monitor_cb"},
+    {"getevt_cb", T_OBJECT_EX, offsetof(capv, getevt_cb), 0, "getevt_cb"},
+    {"putevt_cb", T_OBJECT_EX, offsetof(capv, putevt_cb), 0, "putevt_cb"},
     {NULL}
   };
 
