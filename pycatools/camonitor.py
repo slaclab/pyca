@@ -9,9 +9,11 @@ import time
 from options import Options
 
 class monitor(Pv):
-  def __init__(self, name):
+  def __init__(self, name, maxlen):
     Pv.__init__(self, name)
     self.monitor_cb = self.monitor_handler
+    self.__maxlen = maxlen
+    print self.__maxlen
 
   def monitor_handler(self, exception=None):
     try:
@@ -19,7 +21,11 @@ class monitor(Pv):
         if self.status == pyca.NO_ALARM:
           ts = time.localtime(self.secs+pyca.epoch)
           tstr = time.strftime("%Y-%m-%d %H:%M:%S", ts)
-          print "%-30s %s.%09d" %(self.name, tstr, self.nsec), self.value
+          if (self.__maxlen is not None) and (len(self.value) > int(self.__maxlen)):
+            value = self.value[0:10]
+          else:
+            value = self.value
+          print "%-30s %s.%09d" %(self.name, tstr, self.nsec), value
         else:
           print "%-30s %s %s" %(self.name, 
                                 pyca.severity[self.severity],
@@ -30,14 +36,12 @@ class monitor(Pv):
       print e
 
 if __name__ == '__main__':
-  options = Options(['pvnames'], ['timeout'], [])
+  options = Options(['pvnames'], ['timeout', 'maxlen'], [])
   try:
     options.parse()
   except Exception, msg:
     options.usage(str(msg))
     sys.exit()
-
-  pyca.initialize()
 
   pvnames = options.pvnames.split()
   if options.timeout is not None:
@@ -49,7 +53,7 @@ if __name__ == '__main__':
 
   for pvname in pvnames:
     try:
-      pv = monitor(pvname)
+      pv = monitor(pvname, options.maxlen)
       pv.connect(timeout)
       pv.monitor(evtmask, ctrl=False)
     except pyca.pyexc, e:
@@ -62,4 +66,4 @@ if __name__ == '__main__':
     while True: raw_input()
   except:
     pass
-  pyca.finalize()
+

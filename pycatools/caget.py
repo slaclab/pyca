@@ -8,6 +8,14 @@ import time
 
 from options import Options
 
+def caget(pvname):
+  pv = Pv(pvname)
+  pv.connect(1.)
+  pv.get(False, 1.)
+  pv.disconnect()
+  return pv.value
+  
+
 if __name__ == '__main__':
   options = Options(['pvnames'], ['connect_timeout','get_timeout'], ['ctrl'])
   try:
@@ -15,8 +23,6 @@ if __name__ == '__main__':
   except Exception, msg:
     options.usage(str(msg))
     sys.exit()
-
-  pyca.initialize()
 
   pvnames = options.pvnames.split()
   ctrl = options.ctrl is not None
@@ -49,5 +55,3 @@ if __name__ == '__main__':
       print 'pyca exception: %s' %(e)
     except pyca.caexc, e:
       print 'channel access exception: %s' %(e)
-
-  pyca.finalize()

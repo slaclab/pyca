@@ -15,8 +15,6 @@ if __name__ == '__main__':
     options.usage(str(msg))
     sys.exit()
 
-  pyca.initialize()
-
   pvnames = options.pvnames.split()
 
   if options.timeout is not None:
@@ -41,5 +39,3 @@ if __name__ == '__main__':
       print 'pyca exception: %s' %(e)
     except pyca.caexc, e:
       print 'channel access exception: %s' %(e)
-
-  pyca.finalize()

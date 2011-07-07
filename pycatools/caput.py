@@ -1,11 +1,17 @@
 #!/usr/bin/env python
 
-import pyca
 from Pv import Pv
 
+import pyca
 import sys
 
 from options import Options
+
+def caput(pvname, value):
+  pv = Pv(pvname)
+  pv.connect(1.)
+  pv.put(value, put_timeout=1.)
+  pv.disconnect()
 
 if __name__ == '__main__':
   options = Options(['pvname', 'value'], ['connect_timeout','put_timeout'], [])
@@ -14,8 +20,6 @@ if __name__ == '__main__':
   except Exception, msg:
     options.usage(str(msg))
     sys.exit()
-
-  pyca.initialize()
 
   if options.connect_timeout is not None:
     connect_timeout = float(options.connect_timeout)
@@ -43,5 +47,3 @@ if __name__ == '__main__':
     print 'pyca exception: %s' %(e)
   except pyca.caexc, e:
     print 'channel access exception: %s' %(e)
-
-  pyca.finalize()
