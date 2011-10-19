@@ -46,15 +46,20 @@ void _pyca_put_value(capv* pv, PyObject* pyvalue, T** buf, long count)
     pv->putbuffer = new char[size];
     pv->putbufsiz = size;
   }
-  void* buffer = pv->putbuffer;
-  *buf = reinterpret_cast<T*>(buffer);
+  T* buffer = reinterpret_cast<T*>(pv->putbuffer);
   if (count == 1) {
-    _pyca_put(pyvalue, *buf);
+    _pyca_put(pyvalue, buffer);
   } else {
+//     Py_ssize_t len = PyTuple_Size(pyvalue);
+//     if (len != count) {
+//       pyca_raise_pyexc_pv("put_data", "value doesn't match pv length", pv);
+//     }
     for (long i=0; i<count; i++) {
-      _pyca_put(PyTuple_GetItem(pyvalue, i), buf[i]);
+      PyObject* pyval = PyTuple_GetItem(pyvalue, i);
+      _pyca_put(pyval, buffer+i);
     }
   }
+  *buf = buffer;
 }
 
 static const void* _pyca_put_buffer(capv* pv, 
