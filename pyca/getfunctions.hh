@@ -66,7 +66,7 @@ PyObject* _pyca_get_value(capv* pv, const T* dbrv, long count)
       processptr process = (processptr)PyCObject_AsVoidPtr(pv->processor);
       void* descr = PyCObject_GetDesc(pv->processor);
       process(&(dbrv->value), count, sizeof(dbrv->value), descr);
-      return NULL; // or Py_None???
+      return NULL;
     }
   }
 }
