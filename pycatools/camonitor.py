@@ -25,7 +25,7 @@ class monitor(Pv):
             value = self.value[0:10]
           else:
             value = self.value
-          print "%-30s %s.%09d" %(self.name, tstr, self.nsec), value
+          print "%-30s %08x.%08x" %(self.name, self.secs, self.nsec), value
         else:
           print "%-30s %s %s" %(self.name, 
                                 pyca.severity[self.severity],
