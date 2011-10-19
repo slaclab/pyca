@@ -1,9 +1,3 @@
-// Number of channel state enumeration values.
-#define CHANNEL_NSTATE (4)
-
-// Number of channel access error values.
-#define CHANNEL_NERROR (34)
-
 // Structure to define a channel access PV for python
 struct capv {
   PyObject_HEAD
@@ -19,6 +13,7 @@ struct capv {
   unsigned getbufsiz;  // received data buffer size
   char* putbuffer;     // buffer for send data
   unsigned putbufsiz;  // send data buffer size
+  evid eid;            // monitor subscription
 };
 
 // Possible exceptions
