@@ -15,14 +15,13 @@ class Pv(pyca.capv):
       self.__connection_sem.set()
 
   # Calls to channel access methods
-  def connect(self, timeout=-1):
+  def connect(self, timeout=-1.0):
+    tmo = float(timeout)
     self.create_channel()
-    if timeout > 0:
-      self.__connection_sem.wait(timeout)
+    if tmo > 0:
+      self.__connection_sem.wait(tmo)
       if not self.__connection_sem.isSet():
         raise pyca.pyexc, "connection timedout for PV %s" %(self.name)
-      else:
-        self.__connection_sem.clear()
 
   def disconnect(self):
     self.clear_channel()
@@ -30,11 +29,16 @@ class Pv(pyca.capv):
   def monitor(self, mask, ctrl=False):
     self.subscribe_channel(mask, ctrl)
 
+  def unsubscribe(self):
+    self.unsubscribe_channel()
+
   def get(self, ctrl=False, timeout=-1.0):
-    self.get_data(ctrl, timeout)
+    tmo = float(timeout)
+    self.get_data(ctrl, tmo)
 
   def put(self, value, timeout=-1.0):
-    self.put_data(value, timeout)
+    tmo = float(timeout)
+    self.put_data(value, tmo)
     
   # Used to obtain a copy of the data which won't be overwritten by ca callbacks
   def getcopy(self):
