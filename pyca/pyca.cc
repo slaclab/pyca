@@ -76,9 +76,23 @@ extern "C" {
                                         event_mask,
                                         pyca_monitor_handler,
                                         pv,
-                                        NULL);
+                                        &pv->eid);
     if (result != ECA_NORMAL) {
       pyca_raise_caexc_pv("ca_create_subscription", result, pv);
+    }
+    return ok();
+  }
+
+  static PyObject* unsubscribe_channel(PyObject* self, PyObject* args)
+  {
+    capv* pv = reinterpret_cast<capv*>(self);
+    evid eid = pv->eid;
+    if (eid) {
+      int result = ca_clear_subscription(eid);
+      if (result != ECA_NORMAL) {
+        pyca_raise_caexc_pv("ca_clear_subscription", result, pv);
+      }
+      pv->eid = 0;
     }
     return ok();
   }
@@ -244,6 +258,7 @@ extern "C" {
     pv->getbufsiz = 0;
     pv->putbuffer = 0;
     pv->putbufsiz = 0;
+    pv->eid = 0;
     return 0;
   }
 
@@ -289,6 +304,7 @@ extern "C" {
     {"create_channel", create_channel, METH_VARARGS},
     {"clear_channel", clear_channel, METH_VARARGS},
     {"subscribe_channel", subscribe_channel, METH_VARARGS},
+    {"unsubscribe_channel", unsubscribe_channel, METH_VARARGS},
     {"get_data", get_data, METH_VARARGS},
     {"put_data", put_data, METH_VARARGS},
     {"host", host, METH_VARARGS},
@@ -355,16 +371,18 @@ extern "C" {
 
   // Module functions
   static PyObject* initialize(PyObject*, PyObject*) {
-    PyEval_InitThreads();
-    int result = ca_context_create(ca_enable_preemptive_callback);
-    if (result != ECA_NORMAL) {
-      pyca_raise_caexc("ca_context_create", result);
-    }
+//     PyEval_InitThreads();
+//     int result = ca_context_create(ca_enable_preemptive_callback);
+//     if (result != ECA_NORMAL) {
+//       pyca_raise_caexc("ca_context_create", result);
+//     }
+    printf("warning: no need to invoke initialize with this version of pyca\n");
     return ok();
   }
 
   static PyObject* finalize(PyObject*, PyObject*) {
-    ca_context_destroy();
+//     ca_context_destroy();
+    printf("warning: no need to invoke finalize with this version of pyca\n");
     return ok();
   }
 
@@ -414,87 +432,6 @@ extern "C" {
     {NULL, NULL}
   };
   
-  static const char* ChannelStateStrings[CHANNEL_NSTATE] = {
-    "cs_never_conn",
-    "cs_prev_conn",
-    "cs_conn",
-    "cs_closed"
-  };
-
-  static unsigned long ChannelAccessErrors[CHANNEL_NERROR] = {
-    ECA_NORMAL,
-    ECA_ALLOCMEM,
-    ECA_TOLARGE,
-    ECA_TIMEOUT,
-    ECA_BADTYPE,
-    ECA_INTERNAL,
-    ECA_GETFAIL,
-    ECA_PUTFAIL,
-    ECA_BADCOUNT,
-    ECA_BADSTR,
-    ECA_DISCONN,
-    ECA_DBLCHNL,
-    ECA_EVDISALLOW,
-    ECA_BADMONID,
-    ECA_BADMASK,
-    ECA_IODONE,
-    ECA_IOINPROGRESS,
-    ECA_BADSYNCGRP,
-    ECA_PUTCBINPROG,
-    ECA_NORDACCESS,
-    ECA_NOWTACCESS,
-    ECA_ANACHRONISM,
-    ECA_NOSEARCHADDR,
-    ECA_NOCONVERT,
-    ECA_BADCHID,
-    ECA_BADFUNCPTR,
-    ECA_ISATTACHED,
-    ECA_UNAVAILINSERV,
-    ECA_CHANDESTROY,
-    ECA_BADPRIORITY,
-    ECA_NOTTHREADED,
-    ECA_16KARRAYCLIENT,
-    ECA_CONNSEQTMO,
-    ECA_UNRESPTMO
-  };
-
-  static const char* ChannelAccessErrorStrings[CHANNEL_NERROR] = {
-    "ECA_NORMAL",
-    "ECA_ALLOCMEM",
-    "ECA_TOLARGE",
-    "ECA_TIMEOUT",
-    "ECA_BADTYPE",
-    "ECA_INTERNAL",
-    "ECA_GETFAIL",
-    "ECA_PUTFAIL",
-    "ECA_BADCOUNT",
-    "ECA_BADSTR",
-    "ECA_DISCONN",
-    "ECA_DBLCHNL",
-    "ECA_EVDISALLOW",
-    "ECA_BADMONID",
-    "ECA_BADMASK",
-    "ECA_IODONE",
-    "ECA_IOINPROGRESS",
-    "ECA_BADSYNCGRP",
-    "ECA_PUTCBINPROG",
-    "ECA_NORDACCESS",
-    "ECA_NOWTACCESS",
-    "ECA_ANACHRONISM",
-    "ECA_NOSEARCHADDR",
-    "ECA_NOCONVERT",
-    "ECA_BADCHID",
-    "ECA_BADFUNCPTR",
-    "ECA_ISATTACHED",
-    "ECA_UNAVAILINSERV",
-    "ECA_CHANDESTROY",
-    "ECA_BADPRIORITY",
-    "ECA_NOTTHREADED",
-    "ECA_16KARRAYCLIENT",
-    "ECA_CONNSEQTMO",
-    "ECA_UNRESPTM"
-  };
-
   static const char* AlarmSeverityStrings[ALARM_NSEV] = {
     "NO_ALARM", "MINOR", "MAJOR", "INVALID"
   };
@@ -523,6 +460,8 @@ extern "C" {
     "READ_ACCESS_ALARM",
     "WRITE_ACCESS_ALARM",
   };
+
+  static bool ca_context_initialized = 0;
 
   // Initialize python module
   void initpyca()
@@ -556,35 +495,6 @@ extern "C" {
     // secs between Jan 1st 1970 and Jan 1st 1990
     PyDict_SetItemString(d, "epoch", PyLong_FromLong(7305 * 86400));
 
-    PyObject* st = PyTuple_New(CHANNEL_NSTATE);
-    for( unsigned i = 0; i < CHANNEL_NSTATE; ++i )
-    {
-       PyDict_SetItemString( d,
-                             ChannelStateStrings[i],
-                             PyLong_FromLong( i ) );
-       PyTuple_SET_ITEM( st,
-                         i,
-                         PyString_FromString( ChannelStateStrings[i] ) );
-    }
-    PyDict_SetItemString( d, "states", st );
-
-    PyObject* en = PyDict_New();
-    PyObject* es = PyDict_New();
-    for( unsigned i = 0; i < CHANNEL_NERROR; ++i )
-    {
-       unsigned long err = ChannelAccessErrors[i];
-       const char* str = ChannelAccessErrorStrings[i];
-       PyDict_SetItemString( d, str, PyLong_FromLong( err ) );
-       PyDict_SetItem( en,
-                       PyLong_FromLong( err ),
-                       PyString_FromString( str ) );
-       PyDict_SetItem( es,
-                       PyLong_FromLong( err ),
-                       PyString_FromString( ca_message( err ) ) );
-    }
-    PyDict_SetItemString( d, "error_names", en );
-    PyDict_SetItemString( d, "error_strings", es );
-
     // Add capv type to this module
     Py_INCREF(&capv_type);
     PyModule_AddObject(module, "capv", (PyObject*)&capv_type);
@@ -596,5 +506,19 @@ extern "C" {
     pyca_caexc = PyErr_NewException("pyca.caexc", NULL, NULL);
     Py_INCREF(pyca_caexc);
     PyModule_AddObject(module, "caexc", pyca_caexc);
+
+    PyEval_InitThreads();
+    if (ca_context_initialized == false) {
+      ca_context_initialized = true;
+      int result = ca_context_create(ca_enable_preemptive_callback);
+      if (result != ECA_NORMAL) {
+        fprintf(stderr, 
+                "*** initpyca: ca_context_create failed with status %d\n", 
+              result);
+      } else {
+        // The following seems to cause a segfault at exit
+        // Py_AtExit(ca_context_destroy);
+      }
+    }
   }
 }
