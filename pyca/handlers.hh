@@ -24,7 +24,6 @@ static void pyca_connection_handler(struct connection_handler_args args)
     PyObject* res = PyObject_Call(pv->connect_cb, pytup, NULL);
     Py_XDECREF(res);
     Py_DECREF(pytup);
-    Py_DECREF(pyisconn);
   }
   PyGILState_Release(gstate);
 }
