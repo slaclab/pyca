@@ -1,0 +1,51 @@
+In addition to the regular pycatools (caget, cainfo, camonitor, and caput),
+two more have been added:
+    carec PVNAME OUTPUTFILE [ TIMEOUT ]
+	- This is a quick and dirty PV recorder.  It dumps values of the PV
+	  into the specified file until either interrupted or TIMEOUT seconds
+	  have passed.
+    carecdump FILENAME
+	- This dumps the data in a recorded file in human-readable form.
+
+The real intention is that carec should be used to produce files for playback
+with the pyca library with the PYCA_PLAYBACK option enabled.  This flag adds
+the following methods to the pyca.capv class:
+    start_playback(filename)
+	- If the object is unconnected, set it up to playback carec data from
+	  a file.  If the filename is "", make this an ordinary pyca.capv
+	  object.
+    adjust_time(true/false)
+        - Playback can either use timestamps from the file, or generated
+	  monotonically increasing timestamps close to the present time.
+	  If true, use the artificial timestamps.  (Note: even if playing
+	  backwards in time, the artificial timestamps will be increasing!)
+    realtime(true/false)
+	- Playback can either be done automatically in real time, following
+	  the timestamps in the file, or under program control.  If true,
+	  do automatic playback.  Automatic playback will begin when the PV
+	  is monitored or the first get occurs.  PVs can be changed to or
+	  from realtime mode at any time.
+    single_step()
+	- Move a non-realtime PV by one step.
+    play_forward(true/false)
+	- Playback can either be forwards or backwards in time.  If true,
+	  play forward (the default).
+    jump_forward(seconds)
+	- Move a non-realtime PV forwards in time by the specified number of
+	  seconds.  (If negative, move backwards by this amount.)  Note that
+	  this is unaffected by the current setting of play_forward!
+
+There is one more tool that was checked in here for the lack of a better place
+to put it:
+    buildev CONFIG_FILE OUTPUT_FILE [ TIMEOUT ]
+	- This is an event builder tool.  The CONFIG_FILE is a list of PVs
+	  that constitute an event, with a set of optional flags at the end
+	  of each line.  There are two flags:
+ 	      C - Continuous (do not insist on an update for each event)
+	      T - Trace (print out copious information about the connection)
+          Whenever a complete event is received (updates from all non-continuous
+	  PVs and valid values for all continuous PVs), buildev dumps a line
+	  of text into OUTPUT_FILE consisting of the timestamp, the fiducial
+	  number, and the values of all PVs.  The output also contains a 
+	  one-line header listing all of the fields.  Events are dumped until
+	  the timeout is reached or the program is interrupted.
