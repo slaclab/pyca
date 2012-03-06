@@ -186,7 +186,8 @@ static const void* _pyca_event_process(capv* pv,
 
 static void* _pyca_adjust_buffer_size(capv* pv, 
                                       short dbr_type, 
-                                      long count)
+                                      long count,
+                                      int nxtbuf)
 {
   unsigned size = 0;
   switch (dbr_type) {
@@ -232,6 +233,16 @@ static void* _pyca_adjust_buffer_size(capv* pv,
   default:
     return NULL;
   }
+#ifdef PYCA_PLAYBACK
+  if (nxtbuf) {
+    if (size != pv->nxtbufsiz) {
+      delete [] pv->nxtbuffer;
+      pv->nxtbuffer = new char[size];
+      pv->nxtbufsiz = size;
+    }
+    return pv->getbuffer;
+  }
+#endif // PYCA_PLAYBACK
   if (size != pv->getbufsiz) {
     delete [] pv->getbuffer;
     pv->getbuffer = new char[size];
@@ -239,3 +250,20 @@ static void* _pyca_adjust_buffer_size(capv* pv,
   }
   return pv->getbuffer;
 }
+
+#ifdef PYCA_PLAYBACK
+static void _pyca_swap_buffers(capv* pv)
+{
+  if (pv->getbuffer) {
+      assert(pv->getbufsiz == pv->nxtbufsiz);
+      char *tmp = pv->nxtbuffer;
+      pv->nxtbuffer = pv->getbuffer;
+      pv->getbuffer = tmp;
+  } else {
+      pv->getbuffer = pv->nxtbuffer;
+      pv->getbufsiz = pv->nxtbufsiz;
+      pv->nxtbuffer = new char[pv->nxtbufsiz];
+  }
+}
+#endif // PYCA_PLAYBACK
+

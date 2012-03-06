@@ -1,3 +1,7 @@
+#ifdef PYCA_PLAYBACK
+class playback_thread;
+#endif // PYCA_PLAYBACK
+
 // Structure to define a channel access PV for python
 struct capv {
   PyObject_HEAD
@@ -14,6 +18,31 @@ struct capv {
   char* putbuffer;     // buffer for send data
   unsigned putbufsiz;  // send data buffer size
   evid eid;            // monitor subscription
+
+#ifdef PYCA_PLAYBACK
+  FILE *playback;        // NULL if not in playback mode
+  int adjusttime;        // Should we adjust times to the present?
+  int realtime;          // 1 = playback is realtime, otherwise single_step().
+
+  chtype dbftype;        // DBF type in the playback file
+  int dbrtype;           // DBR type in the playback file
+  int nelem;             // nelem in the playback file
+
+  char* nxtbuffer;       // buffer for next received data
+  unsigned nxtbufsiz;    // next received data buffer size
+
+  epicsTimeStamp actual; // actual time of the next buffered event, set from timestamp
+                         // in file as soon as read in.
+  epicsTimeStamp stamp;  // "present" time of the next buffered event.
+                         // If playing back in real time, just add the increment between
+                         // events in file.  Otherwise, set something close to the present,
+                         // but preserve the fiducial bits.
+
+  playback_thread *thid; // thread ID for subscriptions.
+
+  enum { PB_NOTCONN, PB_OK, PB_EOF } status; // status of the playback.
+  int play_forward;      // 1 = forwards, 0 = backwards
+#endif // PYCA_PLAYBACK
 };
 
 // Possible exceptions
