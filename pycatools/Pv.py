@@ -44,7 +44,7 @@ class Pv(pyca.capv):
   def getcopy(self):
     interval = sys.getcheckinterval()
     try:
-      sys.setcheckinterval(sys.maxint)
+      sys.setcheckinterval(2**31-1)
       datacopy = copy.deepcopy(self.data)
     finally:
       sys.setcheckinterval(interval)
