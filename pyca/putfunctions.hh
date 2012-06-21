@@ -3,7 +3,11 @@ template<class T> static inline void _pyca_put(PyObject* pyvalue, T buf);
 
 template<> static inline void _pyca_put(PyObject* pyvalue, dbr_string_t* buf)
 {
-  memcpy(buf, PyString_AsString(pyvalue), sizeof(dbr_string_t));
+  char *result = PyString_AsString(pyvalue);
+  if (result)
+      memcpy(buf, result, sizeof(dbr_string_t));
+  else
+      (*buf)[0] = 0;
 }
 
 template<> static inline void _pyca_put(PyObject* pyvalue, dbr_enum_t* buf)
@@ -59,7 +63,11 @@ void _pyca_put_value(capv* pv, PyObject* pyvalue, T** buf, long count)
       _pyca_put(pyval, buffer+i);
     }
   }
-  *buf = buffer;
+  if (PyErr_ExceptionMatches(PyExc_TypeError)) {
+      PyErr_Clear();
+      *buf = NULL;
+  } else
+      *buf = buffer;
 }
 
 static const void* _pyca_put_buffer(capv* pv, 
