@@ -1,42 +1,40 @@
 // Channel access GET template functions
-template<class T> static inline PyObject* _pyca_get(T value);
-
-template<> static inline PyObject* _pyca_get(const dbr_string_t value)
+static inline PyObject* _pyca_get(const dbr_string_t value)
 {
   return PyString_FromString(value);
 }
 
-template<> static inline PyObject* _pyca_get(dbr_enum_t value)
+static inline PyObject* _pyca_get(const dbr_enum_t value)
 {
   return PyLong_FromLong(value);
 }
 
-template<> static inline PyObject* _pyca_get(dbr_char_t value)
+static inline PyObject* _pyca_get(const dbr_char_t value)
 {
   return PyLong_FromLong(value);
 }
 
-template<> static inline PyObject* _pyca_get(dbr_short_t value)
+static inline PyObject* _pyca_get(const dbr_short_t value)
 {
   return PyLong_FromLong(value);
 }
 
-template<> static inline PyObject* _pyca_get(dbr_ulong_t value)
+static inline PyObject* _pyca_get(const dbr_ulong_t value)
 {
   return PyLong_FromLong(value);
 }
 
-template<> static inline PyObject* _pyca_get(dbr_long_t value)
+static inline PyObject* _pyca_get(const dbr_long_t value)
 {
   return PyLong_FromLong(value);
 }
 
-template<> static inline PyObject* _pyca_get(dbr_float_t value)
+static inline PyObject* _pyca_get(const dbr_float_t value)
 {
   return PyFloat_FromDouble(value);
 }
 
-template<> static inline PyObject* _pyca_get(dbr_double_t value)
+static inline PyObject* _pyca_get(const dbr_double_t value)
 {
   return PyFloat_FromDouble(value);
 }

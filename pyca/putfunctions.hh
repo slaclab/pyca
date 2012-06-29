@@ -1,7 +1,5 @@
 // Channel access PUT template functions
-template<class T> static inline void _pyca_put(PyObject* pyvalue, T buf);
-
-template<> static inline void _pyca_put(PyObject* pyvalue, dbr_string_t* buf)
+static inline void _pyca_put(PyObject* pyvalue, dbr_string_t* buf)
 {
   char *result = PyString_AsString(pyvalue);
   if (result)
@@ -10,32 +8,32 @@ template<> static inline void _pyca_put(PyObject* pyvalue, dbr_string_t* buf)
       (*buf)[0] = 0;
 }
 
-template<> static inline void _pyca_put(PyObject* pyvalue, dbr_enum_t* buf)
+static inline void _pyca_put(PyObject* pyvalue, dbr_enum_t* buf)
 {
   *buf = PyLong_AsLong(pyvalue);
 }
 
-template<> static inline void _pyca_put(PyObject* pyvalue, dbr_char_t* buf)
+static inline void _pyca_put(PyObject* pyvalue, dbr_char_t* buf)
 {
   *buf = PyLong_AsLong(pyvalue);
 }
 
-template<> static inline void _pyca_put(PyObject* pyvalue, dbr_short_t* buf)
+static inline void _pyca_put(PyObject* pyvalue, dbr_short_t* buf)
 {
   *buf = PyLong_AsLong(pyvalue);
 }
 
-template<> static inline void _pyca_put(PyObject* pyvalue, dbr_long_t* buf)
+static inline void _pyca_put(PyObject* pyvalue, dbr_long_t* buf)
 {
   *buf = PyLong_AsLong(pyvalue);
 }
 
-template<> static inline void _pyca_put(PyObject* pyvalue, dbr_float_t* buf)
+static inline void _pyca_put(PyObject* pyvalue, dbr_float_t* buf)
 {
   *buf = PyFloat_AsDouble(pyvalue);
 }
 
-template<> static inline void _pyca_put(PyObject* pyvalue, dbr_double_t* buf)
+static inline void _pyca_put(PyObject* pyvalue, dbr_double_t* buf)
 {
   *buf = PyFloat_AsDouble(pyvalue);
 }
