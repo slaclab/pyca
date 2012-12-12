@@ -414,6 +414,9 @@ extern "C" {
         short dbr_type = (Py_True == pyctrl) ?
             dbf_type_to_DBR_CTRL(type) : // Asks IOC to send status+time+limits+value
             dbf_type_to_DBR_TIME(type);  // Asks IOC to send status+time+value
+        if (dbr_type_is_ENUM(dbr_type) && pv->string_enum)
+            dbr_type = (Py_True == pyctrl) ? DBR_CTRL_STRING : DBR_TIME_STRING;
+
         unsigned long event_mask = PyLong_AsLong(pymsk);
         int result = ca_create_subscription(dbr_type,
                                             count,
@@ -496,6 +499,8 @@ extern "C" {
         short dbr_type = (Py_True == pyctrl) ?
             dbf_type_to_DBR_CTRL(type) : // Asks IOC to send status+time+limits+value
             dbf_type_to_DBR_TIME(type);  // Asks IOC to send status+time+value
+        if (dbr_type_is_ENUM(dbr_type) && pv->string_enum)
+            dbr_type = (Py_True == pyctrl) ? DBR_CTRL_STRING : DBR_TIME_STRING;
         double timeout = PyFloat_AsDouble(pytmo);
         if (timeout < 0) {
             int result = ca_array_get_callback(dbr_type,
@@ -660,6 +665,25 @@ extern "C" {
         int rw = ca_read_access(pv->cid) ? 1 : 0;
         rw |= ca_write_access(pv->cid) ? 2 : 0;
         return PyInt_FromLong(rw);
+    }
+
+    static PyObject* is_string_enum(PyObject* self, PyObject* args)
+    {
+        capv* pv = reinterpret_cast<capv*>(self);
+        return PyBool_FromLong(pv->string_enum);
+    }
+
+    static PyObject* set_string_enum(PyObject* self, PyObject* args)
+    {
+        capv* pv = reinterpret_cast<capv*>(self);
+        PyObject* pyval;
+
+        if (!PyArg_ParseTuple(args, "O:set_string_enum", &pyval) ||
+            !PyBool_Check(pyval)) {
+            pyca_raise_pyexc_pv("set_string_enum", "error parsing arguments", pv);
+        }
+        pv->string_enum = (Py_True == pyval);
+        return ok();
     }
 
 #ifdef PYCA_PLAYBACK
@@ -981,6 +1005,8 @@ extern "C" {
         {"count", count, METH_VARARGS},
         {"type", type, METH_VARARGS},
         {"rwaccess", rwaccess, METH_VARARGS},
+        {"set_string_enum", set_string_enum, METH_VARARGS},
+        {"is_string_enum", is_string_enum, METH_VARARGS},
 #ifdef PYCA_PLAYBACK
         {"start_playback", start_playback, METH_VARARGS},
         {"adjust_time", adjust_time, METH_VARARGS},

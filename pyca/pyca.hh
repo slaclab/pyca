@@ -18,6 +18,7 @@ struct capv {
   char* putbuffer;     // buffer for send data
   unsigned putbufsiz;  // send data buffer size
   evid eid;            // monitor subscription
+  int string_enum;     // Should enum be numeric or string?
 
 #ifdef PYCA_PLAYBACK
   FILE *playback;        // NULL if not in playback mode
