@@ -10,7 +10,7 @@ from options import Options
 def caput(pvname, value):
   pv = Pv(pvname)
   pv.connect(1.)
-  pv.put(value, put_timeout=1.)
+  pv.put(value, timeout=1.)
   pv.disconnect()
 
 if __name__ == '__main__':
