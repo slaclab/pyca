@@ -1,6 +1,6 @@
 // #define PYCA_PLAYBACK  // Uncomment to allow playback of recordings!
-#include <stdio.h>
 #include <Python.h>
+#include <stdio.h>
 #include <structmember.h>
 
 #include <cadef.h>
@@ -1089,6 +1089,19 @@ extern "C" {
         return ok();
     }
 
+    static ca_client_context *ca_context = 0;
+
+    static PyObject* attach_context(PyObject* self, PyObject* args) {
+        // only failure modes are if it's already attached or single threaded, 
+        // so no need to raise an exception
+        int res = ca_attach_context(ca_context);
+	if (res != ECA_NORMAL) {
+	    pyca_raise_pyexc("attach_context", "attach error");
+	}
+
+        return ok();
+    }
+	        
     static PyObject* pend_io(PyObject*, PyObject* args) {
         PyObject* pytmo;
         if (!PyArg_ParseTuple(args, "O:pend_io", &pytmo) ||
@@ -1123,10 +1136,11 @@ extern "C" {
             pyca_raise_caexc("ca_pend_event", result);
         }
         return ok();
-    }
+    }    
 
     // Register module methods
     static PyMethodDef pyca_methods[] = {
+        {"attach_context", attach_context, METH_VARARGS},
         {"initialize", initialize, METH_VARARGS},
         {"finalize", finalize, METH_VARARGS},
         {"pend_io", pend_io, METH_VARARGS},
@@ -1164,7 +1178,6 @@ extern "C" {
         "WRITE_ACCESS_ALARM",
     };
 
-    static bool ca_context_initialized = 0;
 
     // Initialize python module
     void initpyca()
@@ -1200,7 +1213,7 @@ extern "C" {
 
         // Add capv type to this module
         Py_INCREF(&capv_type);
-        PyModule_AddObject(module, "capv", (PyObject*)&capv_type);
+	PyModule_AddObject(module, "capv", (PyObject*)&capv_type);
 
         // Add custom exceptions to this module
         pyca_pyexc = PyErr_NewException("pyca.pyexc", NULL, NULL);
@@ -1211,14 +1224,14 @@ extern "C" {
         PyModule_AddObject(module, "caexc", pyca_caexc);
 
         PyEval_InitThreads();
-        if (ca_context_initialized == false) {
-            ca_context_initialized = true;
+        if (!ca_context) {
             int result = ca_context_create(ca_enable_preemptive_callback);
             if (result != ECA_NORMAL) {
                 fprintf(stderr, 
                         "*** initpyca: ca_context_create failed with status %d\n", 
                         result);
             } else {
+	      ca_context = ca_current_context();
                 // The following seems to cause a segfault at exit
                 // Py_AtExit(ca_context_destroy);
             }
