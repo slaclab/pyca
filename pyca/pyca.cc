@@ -150,6 +150,7 @@ static int move_to_next(capv *pv, int disc_ok)
     return result;
 }
 
+#ifdef PYCA_PLAYBACK
 static PyObject *process_get(capv *pv, char *buffer, double timeout)
 {
     if (timeout < 0) {
@@ -172,6 +173,7 @@ static PyObject *process_get(capv *pv, char *buffer, double timeout)
     }
     return ok();
 }
+#endif
 
 enum state { stop_req, stopped, run_req, running, dead };
 
@@ -377,10 +379,12 @@ extern "C" {
         capv* pv = reinterpret_cast<capv*>(self);
         PyObject* pyctrl;
         PyObject* pymsk;
+        PyObject* pycnt = NULL;
 
-        if (!PyArg_ParseTuple(args, "OO:subscribe", &pymsk, &pyctrl) ||
+        if (!PyArg_ParseTuple(args, "OO|O:subscribe", &pymsk, &pyctrl, &pycnt) ||
             !PyLong_Check(pymsk) ||
-            !PyBool_Check(pyctrl)) {
+            !PyBool_Check(pyctrl) ||
+            (pycnt && pycnt != Py_None && !PyInt_Check(pycnt))) {
             pyca_raise_pyexc_pv("subscribe_channel", "error parsing arguments", pv);
         }
 
@@ -407,6 +411,11 @@ extern "C" {
             pyca_raise_pyexc_pv("subscribe_channel", "channel is null", pv);
         }
         int count = ca_element_count(cid);
+        if (pycnt && pycnt != Py_None) {
+            int limit = PyInt_AsLong(pycnt);
+            if (limit < count)
+                count = limit;
+        }
         short type = ca_field_type(cid);
         if (count == 0 || type == TYPENOTCONN) {
             pyca_raise_caexc_pv("ca_field_type", ECA_DISCONNCHID, pv);
@@ -1094,10 +1103,12 @@ extern "C" {
     static PyObject* attach_context(PyObject* self, PyObject* args) {
         // only failure modes are if it's already attached or single threaded, 
         // so no need to raise an exception
-        int res = ca_attach_context(ca_context);
-	if (res != ECA_NORMAL) {
-	    pyca_raise_pyexc("attach_context", "attach error");
-	}
+        if (ca_current_context() == NULL) {
+            int res = ca_attach_context(ca_context);
+            if (res != ECA_NORMAL) {
+                pyca_raise_pyexc("attach_context", "attach error");
+            }
+        }
 
         return ok();
     }

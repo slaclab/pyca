@@ -80,6 +80,14 @@ The pyca module provides the following methods:
     error occurs.  This is a useful way to block script execution but
     allow asynchronous callbacks to be called.
 
+6.  pyca.attach_context()
+
+    Channel Access has a notion of separate contexts for separate threads.
+    pyca does not support this, and requires all threads desiring to
+    access PVs attach to one global context.  This method must be called
+    in each thread before doing any other pyca calls.  If this is not
+    done, the other pyca methods will fail in mysterious ways.
+
 All of these module methods can raise 'pyca.caexc'.
 
 The pyca module provides the following module constants: (Note that
@@ -362,7 +370,7 @@ the request to be delivered to an IOC.
        pyca.pyexc: If the channel was not previously opened.
        pyca.caexc: If the underlying channel access call failed.
 
-3.  .subscribe_channel( mask, control )
+3.  .subscribe_channel( mask, control, count )
 
     Place a "monitor" on a previously connected PV.  A "monitor"
     specifies that the IOC will spontaneously notify us that the PV
@@ -398,6 +406,14 @@ the request to be delivered to an IOC.
 
     These become member variables of the pyca.capv instance.  See
     above for a description of these fields.
+
+    'count' is an optional parameter, indicating the number of elements to
+    retrieve.  If this parameter is not given, all available elements will
+    be retrieved.  The intention is that by giving a count of 1, this can
+    be used as a notification that new data is available without having to
+    retrieve all of it.  An application can then throttle itself by
+    explicitly calling get_data in a second capv instance when an update
+    is desired.
 
 4.  .get_data( control, timeout )
 
