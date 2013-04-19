@@ -467,9 +467,12 @@ extern "C" {
         capv* pv = reinterpret_cast<capv*>(self);
         PyObject* pyctrl;
         PyObject* pytmo;
-        if (!PyArg_ParseTuple(args, "OO:get", &pyctrl, &pytmo) ||
+        PyObject* pycnt = NULL;
+
+        if (!PyArg_ParseTuple(args, "OO|O:get", &pyctrl, &pytmo, &pycnt) ||
             !PyBool_Check(pyctrl) ||
-            !PyFloat_Check(pytmo)) {
+            !PyFloat_Check(pytmo) ||
+            (pycnt && pycnt != Py_None && !PyInt_Check(pycnt))) {
             pyca_raise_pyexc_pv("get_data", "error parsing arguments", pv);
         }
 
@@ -501,6 +504,11 @@ extern "C" {
             pyca_raise_pyexc_pv("get_data", "channel is null", pv);
         }
         int count = ca_element_count(cid);
+        if (pycnt && pycnt != Py_None) {
+            int limit = PyInt_AsLong(pycnt);
+            if (limit < count)
+                count = limit;
+        }
         short type = ca_field_type(cid);
         if (count == 0 || type == TYPENOTCONN) {
             pyca_raise_caexc_pv("ca_field_type", ECA_DISCONNCHID, pv);
