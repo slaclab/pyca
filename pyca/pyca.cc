@@ -75,7 +75,6 @@ extern "C" {
                 pv->count = PyInt_AsLong(pycnt);
             else
                 pv->count = 0;
-            printf("Setting didmon.\n");
             pv->didmon = 1;
             return ok();
         }
@@ -119,7 +118,6 @@ extern "C" {
         capv* pv = reinterpret_cast<capv*>(self);
 
         if (pv->simulated != Py_None) {
-            printf("Clearing didmon.\n");
             pv->didmon = 0;
             return ok();
         }
@@ -161,7 +159,6 @@ extern "C" {
             if (timeout > 0) {
                 pyca_raise_pyexc_pv("get_data", "Can't specify a  get timeout on simulated PV", pv);
             }
-            printf("Setting didget.\n");
             pv->didget = 1;
             return ok();
         }
