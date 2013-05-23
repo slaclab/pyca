@@ -4,10 +4,11 @@ struct capv {
   PyObject* name;      // PV name
   PyObject* data;      // data dictionary
   PyObject* processor; // user processor function
-  PyObject* connect_cb; // connection callback
-  PyObject* monitor_cb; // monitor callback
-  PyObject* getevt_cb;  // event callback
-  PyObject* putevt_cb;  // event callback
+  PyObject* connect_cb;// connection callback
+  PyObject* monitor_cb;// monitor callback
+  PyObject* getevt_cb; // event callback
+  PyObject* putevt_cb; // event callback
+  PyObject* simulated; // None if real PV, otherwise just simulated.
   chid cid;            // channel access ID  
   char* getbuffer;     // buffer for received data
   unsigned getbufsiz;  // received data buffer size
@@ -15,7 +16,9 @@ struct capv {
   unsigned putbufsiz;  // send data buffer size
   evid eid;            // monitor subscription
   int string_enum;     // Should enum be numeric or string?
-
+  int count;           // How many elements are we monitoring?
+  int didget;          // for simulation.
+  int didmon;          // for simulation.
 };
 
 // Possible exceptions

@@ -67,18 +67,31 @@ extern "C" {
             pyca_raise_pyexc_pv("subscribe_channel", "error parsing arguments", pv);
         }
 
+        if (pv->simulated != Py_None) {
+            if (pyctrl == Py_True) {
+                pyca_raise_pyexc_pv("subscribe_channel", "Can't get control info on simulated PV", pv);
+            }
+            if (pycnt && pycnt != Py_None)
+                pv->count = PyInt_AsLong(pycnt);
+            else
+                pv->count = 0;
+            printf("Setting didmon.\n");
+            pv->didmon = 1;
+            return ok();
+        }
+
         chid cid = pv->cid;
         if (!cid) {
             pyca_raise_pyexc_pv("subscribe_channel", "channel is null", pv);
         }
-        int count = ca_element_count(cid);
+        pv->count = ca_element_count(cid);
         if (pycnt && pycnt != Py_None) {
             int limit = PyInt_AsLong(pycnt);
-            if (limit < count)
-                count = limit;
+            if (limit < pv->count)
+                pv->count = limit;
         }
         short type = ca_field_type(cid);
-        if (count == 0 || type == TYPENOTCONN) {
+        if (pv->count == 0 || type == TYPENOTCONN) {
             pyca_raise_caexc_pv("ca_field_type", ECA_DISCONNCHID, pv);
         }
         short dbr_type = (Py_True == pyctrl) ?
@@ -89,7 +102,7 @@ extern "C" {
 
         unsigned long event_mask = PyLong_AsLong(pymsk);
         int result = ca_create_subscription(dbr_type,
-                                            count,
+                                            pv->count,
                                             cid,
                                             event_mask,
                                             pyca_monitor_handler,
@@ -104,6 +117,12 @@ extern "C" {
     static PyObject* unsubscribe_channel(PyObject* self, PyObject* args)
     {
         capv* pv = reinterpret_cast<capv*>(self);
+
+        if (pv->simulated != Py_None) {
+            printf("Clearing didmon.\n");
+            pv->didmon = 0;
+            return ok();
+        }
 
         evid eid = pv->eid;
         if (eid) {
@@ -130,18 +149,35 @@ extern "C" {
             pyca_raise_pyexc_pv("get_data", "error parsing arguments", pv);
         }
 
+        if (pv->simulated != Py_None) {
+            if (pyctrl == Py_True) {
+                pyca_raise_pyexc_pv("get_data", "Can't get control info on simulated PV", pv);
+            }
+            if (pycnt && pycnt != Py_None)
+                pv->count = PyInt_AsLong(pycnt);
+            else
+                pv->count = 0;
+            double timeout = PyFloat_AsDouble(pytmo);
+            if (timeout > 0) {
+                pyca_raise_pyexc_pv("get_data", "Can't specify a  get timeout on simulated PV", pv);
+            }
+            printf("Setting didget.\n");
+            pv->didget = 1;
+            return ok();
+        }
+        
         chid cid = pv->cid;
         if (!cid) {
             pyca_raise_pyexc_pv("get_data", "channel is null", pv);
         }
-        int count = ca_element_count(cid);
+        pv->count = ca_element_count(cid);
         if (pycnt && pycnt != Py_None) {
             int limit = PyInt_AsLong(pycnt);
-            if (limit < count)
-                count = limit;
+            if (limit < pv->count)
+                pv->count = limit;
         }
         short type = ca_field_type(cid);
-        if (count == 0 || type == TYPENOTCONN) {
+        if (pv->count == 0 || type == TYPENOTCONN) {
             pyca_raise_caexc_pv("ca_field_type", ECA_DISCONNCHID, pv);
         }
         short dbr_type = (Py_True == pyctrl) ?
@@ -152,7 +188,7 @@ extern "C" {
         double timeout = PyFloat_AsDouble(pytmo);
         if (timeout < 0) {
             int result = ca_array_get_callback(dbr_type,
-                                               count,
+                                               pv->count,
                                                cid,
                                                pyca_getevent_handler,
                                                pv);
@@ -160,12 +196,12 @@ extern "C" {
                 pyca_raise_caexc_pv("ca_array_get_callback", result, pv);
             }
         } else {
-            void* buffer = _pyca_adjust_buffer_size(pv, dbr_type, count, 0);
+            void* buffer = _pyca_adjust_buffer_size(pv, dbr_type, pv->count, 0);
             if (!buffer) {
                 pyca_raise_pyexc_pv("get_data", "un-handled type", pv);
             }
             int result = ca_array_get(dbr_type,
-                                      count,
+                                      pv->count,
                                       cid,
                                       buffer);
             if (result != ECA_NORMAL) {
@@ -177,7 +213,7 @@ extern "C" {
             if (result != ECA_NORMAL) {
                 pyca_raise_caexc_pv("ca_pend_io", result, pv);
             }      
-            if (!_pyca_event_process(pv, buffer, dbr_type, count)) {
+            if (!_pyca_event_process(pv, buffer, dbr_type, pv->count)) {
                 pyca_raise_pyexc_pv("get_data", "un-handled type", pv);
             }
         }
@@ -312,6 +348,8 @@ extern "C" {
         pv->monitor_cb = 0;
         pv->getevt_cb = 0;
         pv->putevt_cb = 0;
+        pv->simulated = Py_None;
+        Py_INCREF(pv->simulated);
         pv->cid = 0;
         pv->getbuffer = 0;
         pv->getbufsiz = 0;
@@ -326,6 +364,7 @@ extern "C" {
         capv* pv = reinterpret_cast<capv*>(self);
         Py_XDECREF(pv->data);
         Py_XDECREF(pv->name);
+        Py_XDECREF(pv->simulated);
         if (pv->cid) {
             ca_clear_channel(pv->cid);
             pv->cid = 0;
@@ -385,6 +424,7 @@ extern "C" {
         {"monitor_cb", T_OBJECT_EX, offsetof(capv, monitor_cb), 0, "monitor_cb"},
         {"getevt_cb", T_OBJECT_EX, offsetof(capv, getevt_cb), 0, "getevt_cb"},
         {"putevt_cb", T_OBJECT_EX, offsetof(capv, putevt_cb), 0, "putevt_cb"},
+        {"simulated", T_OBJECT_EX, offsetof(capv, simulated), 0, "simulated"},
         {NULL}
     };
 
@@ -576,6 +616,18 @@ extern "C" {
         PyDict_SetItemString(d, "alarm", a);
         // secs between Jan 1st 1970 and Jan 1st 1990
         PyDict_SetItemString(d, "epoch", PyLong_FromLong(7305 * 86400));
+
+#if 1
+        a = PyCObject_FromVoidPtr((void *)pyca_getevent_handler, NULL);
+        PyModule_AddObject(module, "get_handler", a);
+        a = PyCObject_FromVoidPtr((void *)pyca_monitor_handler, NULL);
+        PyModule_AddObject(module, "monitor_handler", a);
+#else
+        a = PyCapsule_New(pyca_getevent_handler, "pyca.get_handler", NULL);
+        PyModule_AddObject(module, "get_handler", a);
+        a = PyCapsule_New(pyca_monitor_handler, "pyca.monitor_handler", NULL);
+        PyModule_AddObject(module, "monitor_handler", a);
+#endif
 
         // Add capv type to this module
         Py_INCREF(&capv_type);
