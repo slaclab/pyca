@@ -143,6 +143,48 @@ extern "C" {
         return xtcrdr_next((PyObject *)rdr, NULL);
     }
 
+    static PyObject* xtcrdr_unassociate(PyObject* self, PyObject* args)
+    {
+        xtcrdr* rdr = reinterpret_cast<xtcrdr*>(self);
+
+        PyObject *pyatom, *pycapv;
+        if (!PyArg_ParseTuple(args, "OO:unassociate", &pyatom, &pycapv) ||
+            !PyString_Check(pyatom) ||
+            !PyObject_IsInstance(pycapv, capv_type)) {
+            pyca_raise_pyexc_pv("associate", "cannot get associate parameters", rdr);
+        }
+
+        char *atom = PyString_AsString(pyatom);
+        int i;
+        for (i = 0; i < rdr->count; i++) {
+            char *word = PyString_AS_STRING(PyTuple_GET_ITEM(rdr->atoms, i));
+            if (!strcmp(atom, word))
+                break;
+        }
+
+        if (i == rdr->count) {
+            pyca_raise_pyexc_pv("associate", "Bad XTC element", rdr);
+        }
+
+        PyObject *l = PyDict_GetItem(rdr->data, pyatom);
+
+        int cnt = PyList_GET_SIZE(l);
+        for (int j = 0; j < cnt; j++) {
+            PyObject *pyval = PyList_GET_ITEM(l, j);
+            if (pyval == pycapv) {
+                PyObject *pylast = PyList_GET_ITEM(l, cnt - 1);
+                if (j != cnt - 1) {
+                    PyList_SET_ITEM(l, j, pylast);
+                    PyList_SET_ITEM(l, cnt - 1, pycapv);
+                }
+                PyObject *l2 = PyList_GetSlice(l, 0, cnt - 1);
+                PyDict_SetItem(rdr->data, pyatom, l2);
+                return ok();
+            }
+        }
+        return ok();
+    }
+
     static PyObject* xtcrdr_associate(PyObject* self, PyObject* args)
     {
         xtcrdr* rdr = reinterpret_cast<xtcrdr*>(self);
@@ -164,9 +206,14 @@ extern "C" {
 
         if (i == rdr->count) {
             pyca_raise_pyexc_pv("associate", "Bad XTC element", rdr);
-        } else
-            PyDict_SetItem(rdr->data, pyatom, pycapv);
-        
+        }
+
+        PyObject *l = PyDict_GetItem(rdr->data, pyatom);
+        if (!l)
+            l = PyList_New(0);
+        PyList_Append(l, pycapv);
+        Py_INCREF(pycapv);
+        PyDict_SetItem(rdr->data, pyatom, l);
 
         return ok();
     }
@@ -198,34 +245,25 @@ extern "C" {
         xtc = (Xtc *)(xtc->payload());
         for (int i = 0; i < rdr->count; i++, xtc = xtc->next()) {
             PyObject *pyatom = PyTuple_GET_ITEM(rdr->atoms, i);
-            PyObject *pyval = PyDict_GetItem(rdr->data, pyatom);
+            PyObject *pylist = PyDict_GetItem(rdr->data, pyatom);
 
-            if (!pyval)
+            if (!pylist)
                 continue;
 
-            capv *pv = reinterpret_cast<capv*>(pyval);
-
-            if (!pv->didmon && !pv->didget)
-                continue;
-
-            ev.usr = pv;
+            int maxcnt;
 
             switch (xtc->contains.id()) {
             case TypeId::Id_Epics: {
                 EpicsPvTime<DBR_LONG> *t = (EpicsPvTime<DBR_LONG> *)(xtc->payload());
                 ev.type = t->iDbrType;
-                ev.count = t->iNumElements;
-                if (pv->count && pv->count < ev.count)
-                    ev.count = pv->count;
+                maxcnt = t->iNumElements;
                 ev.dbr = (void *)&t->status; /* First field of the dbr_time_* type */
                 break;
             }
             case TypeId::Id_Frame: {
                 Camera::FrameV1 *f = (Camera::FrameV1 *)(xtc->payload());
                 ev.type = DBR_TIME_SHORT;
-                ev.count = f->width() * f->height();
-                if (pv->count && pv->count < ev.count)
-                    ev.count = pv->count;
+                maxcnt = f->width() * f->height();
                 if (buf == NULL) {
                     buf = (dbr_time_short *)malloc(sizeof(dbr_time_short) + f->data_size());
                     buf->status = 0;
@@ -235,7 +273,7 @@ extern "C" {
                         buf->stamp.nsec = ts->nsec;
                     }
                 }
-                memcpy(&buf->value, f->data(), ev.count * sizeof(short));
+                memcpy(&buf->value, f->data(), maxcnt * sizeof(short));
                 ev.dbr = buf;
                 break;
             }
@@ -243,16 +281,32 @@ extern "C" {
                 pyca_raise_pyexc_pv("process", "Unknown TypeID in XTC file", rdr);
                 break;
             }
-            if (pv->didmon) {
-                Py_BEGIN_ALLOW_THREADS
-                    pyca_monitor_handler(ev);
-                Py_END_ALLOW_THREADS
-            }
-            if (pv->didget) {
-                pv->didget = 0;
-                Py_BEGIN_ALLOW_THREADS
-                    pyca_getevent_handler(ev);
-                Py_END_ALLOW_THREADS
+
+            int cnt = PyList_GET_SIZE(pylist);
+            for (int j = 0; j < cnt; j++) {
+                PyObject *pyval = PyList_GET_ITEM(pylist, j);
+                capv *pv = reinterpret_cast<capv*>(pyval);
+
+                if (!pv->didmon && !pv->didget)
+                    continue;
+
+                ev.usr = pv;
+                if (pv->count && pv->count < maxcnt)
+                    ev.count = pv->count;
+                else
+                    ev.count = maxcnt;
+
+                if (pv->didmon) {
+                    Py_BEGIN_ALLOW_THREADS
+                        pyca_monitor_handler(ev);
+                    Py_END_ALLOW_THREADS
+                }
+                if (pv->didget) {
+                    pv->didget = 0;
+                    Py_BEGIN_ALLOW_THREADS
+                        pyca_getevent_handler(ev);
+                    Py_END_ALLOW_THREADS
+                }
             }
         }
         if (buf)
@@ -353,6 +407,7 @@ extern "C" {
         {"open", xtcrdr_open, METH_VARARGS},
         {"next", xtcrdr_next, METH_VARARGS},
         {"associate", xtcrdr_associate, METH_VARARGS},
+        {"unassociate", xtcrdr_unassociate, METH_VARARGS},
         {"process", xtcrdr_process, METH_VARARGS},
         {"moveto", xtcrdr_moveto, METH_VARARGS},
         {NULL,  NULL},
