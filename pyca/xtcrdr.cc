@@ -21,6 +21,12 @@
 #include"pdsdata/epics/EpicsPvData.hh"
 #include"pdsdata/camera/FrameV1.hh"
 
+/*
+ * Sigh.  We want to include the DAQ code directly, but Sequence.cc and 
+ * TimeStamp.cc don't play nice together.
+ */
+#include"pdsdata/xtc/src/Sequence.cc"
+
 using namespace std;
 using namespace Pds;
 

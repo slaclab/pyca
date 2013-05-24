@@ -8,12 +8,11 @@ libincs_pyca := python/include/python2.5 \
 liblibs_pyca := epics/ca \
                 epics/Com
 
-libsrcs_xtcrdr := xtcrdr.cc
+libsrcs_xtcrdr := xtcrdr.cc daq.cc
 libincs_xtcrdr := python/include/python2.5 \
 		  python/include/python2.7 \
-		  daqinc \
+		  daq \
                   epics/include \
                   epics/include/os/Linux
 liblibs_xtcrdr := epics/ca \
-                  epics/Com \
-	  	  daqlib/xtcdata
+                  epics/Com
