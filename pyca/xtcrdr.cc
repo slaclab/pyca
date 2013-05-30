@@ -325,15 +325,15 @@ extern "C" {
     {
         xtcrdr* rdr = reinterpret_cast<xtcrdr*>(self);
         PyObject *pytuple;
-        if (!PyArg_ParseTuple(args, "OO:moveto", &pytuple) ||
+        if (!PyArg_ParseTuple(args, "O:moveto", &pytuple) ||
             !PyTuple_Check(pytuple) ||
             PyTuple_Size(pytuple) != 2) {
-            pyca_raise_pyexc_pv("moveto", "Invalid position", rdr);
+            pyca_raise_pyexc_pv("moveto", "Invalid position - expected tuple?", rdr);
         }
         PyObject *pychunk  = PyTuple_GET_ITEM(pytuple, 0);
         PyObject *pyoffset = PyTuple_GET_ITEM(pytuple, 1);
-        if (!PyLong_Check(pychunk) || !PyLong_Check(pychunk)) {
-            pyca_raise_pyexc_pv("moveto", "Invalid position", rdr);
+        if (!PyLong_Check(pychunk) || !PyLong_Check(pyoffset)) {
+            pyca_raise_pyexc_pv("moveto", "Invalid position - expected tuple of longs?", rdr);
         }
         long chunk       = PyLong_AsLong(pychunk);
         long long offset = PyLong_AsLongLong(pyoffset);
