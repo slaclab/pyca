@@ -32,6 +32,7 @@ using namespace Pds;
 
 #include "pyca.hh"
 #include "xtcrdr.hh"
+#define POSIX_TIME_AT_EPICS_EPOCH 631152000u
 
 extern "C" {
     static PyObject* pyca = NULL;
@@ -227,27 +228,25 @@ extern "C" {
     static PyObject* xtcrdr_process(PyObject* self, PyObject* args)
     {
         xtcrdr* rdr = reinterpret_cast<xtcrdr*>(self);
-        epicsTimeStamp *ts = NULL;
+        epicsTimeStamp ts;
         struct event_handler_args ev;
         dbr_time_short *buf = NULL;
 
-        Xtc *xtc = (Xtc *)(rdr->dg->xtc.payload());
-        int size = xtc->sizeofPayload();
-        xtc = (Xtc *)(xtc->payload());
-        /* Find a timestamp for this event! */
-        while (size > 0) {
-            if (xtc->contains.id() == TypeId::Id_Epics) {
-                ts = &((EpicsPvTime<DBR_LONG> *)(xtc->payload()))->stamp;
-                break;
-            }
-            size -= xtc->extent;
-            xtc = xtc->next();
+        /*
+         * Create an EPICS timestamp for this event.  Make sure that the low bits
+         * of the nanoseconds contain the fiducial!
+         */
+        ts.secPastEpoch = rdr->dg->seq.clock().seconds() - POSIX_TIME_AT_EPICS_EPOCH;
+        ts.nsec         = rdr->dg->seq.clock().nanoseconds();
+        if ((ts.nsec & 0x1ffff) != rdr->dg->seq.stamp().fiducials()) {
+            ts.nsec &= ~0x1ffff;
+            ts.nsec |= rdr->dg->seq.stamp().fiducials();
         }
 
         ev.chid = 0;
         ev.status = ECA_NORMAL;
 
-        xtc = (Xtc *)(rdr->dg->xtc.payload());
+        Xtc *xtc = (Xtc *)(rdr->dg->xtc.payload());
         xtc = (Xtc *)(xtc->payload());
         for (int i = 0; i < rdr->count; i++, xtc = xtc->next()) {
             PyObject *pyatom = PyTuple_GET_ITEM(rdr->atoms, i);
@@ -263,6 +262,9 @@ extern "C" {
                 EpicsPvTime<DBR_LONG> *t = (EpicsPvTime<DBR_LONG> *)(xtc->payload());
                 ev.type = t->iDbrType;
                 maxcnt = t->iNumElements;
+                /* This probably isn't necessary, but just in case! */
+                t->stamp.secPastEpoch = ts.secPastEpoch;
+                t->stamp.nsec = ts.nsec;
                 ev.dbr = (void *)&t->status; /* First field of the dbr_time_* type */
                 break;
             }
@@ -274,10 +276,8 @@ extern "C" {
                     buf = (dbr_time_short *)malloc(sizeof(dbr_time_short) + f->data_size());
                     buf->status = 0;
                     buf->severity = 0;
-                    if (ts) {
-                        buf->stamp.secPastEpoch = ts->secPastEpoch;
-                        buf->stamp.nsec = ts->nsec;
-                    }
+                    buf->stamp.secPastEpoch = ts.secPastEpoch;
+                    buf->stamp.nsec = ts.nsec;
                 }
                 memcpy(&buf->value, f->data(), maxcnt * sizeof(short));
                 ev.dbr = buf;
