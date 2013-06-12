@@ -11,4 +11,9 @@ struct xtcrdr {
   int   count;         // How many data items in the file.
   char* buffer;        // buffer for received data
   unsigned bufsiz;     // received data buffer size
+
+  epicsTimeStamp ts;   // Used when traversing to process.
+  struct event_handler_args ev;
+  dbr_time_short *dts;
+  int tcnt;
 };

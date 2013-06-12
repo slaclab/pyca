@@ -83,10 +83,65 @@ extern "C" {
         return s;
     }
 
+    /*
+     * Exceptions return NULL.  So NULL = error, Py_None = ok.  We don't bother
+     * reference counting Py_None.
+     */
+    static PyObject *XtcTraverse(Xtc *xtc, PyObject *(*func)(Xtc *, void *), void *arg)
+    {
+        if (xtc->contains.id() == TypeId::Id_Xtc) {
+            int size = xtc->sizeofPayload();
+            Xtc *child = (Xtc *)(xtc->payload());
+            while (size > 0) {
+                if (!XtcTraverse(child, func, arg))
+                    return NULL;
+                size -= child->extent;
+                child = child->next();
+            }
+            return Py_None;
+        } else {
+            return (*func)(xtc, arg);
+        }
+    }
+
+    static PyObject *countatoms(Xtc *xtc, void *arg)
+    {
+        if (xtc->contains.id() == TypeId::Id_Epics ||
+            xtc->contains.id() == TypeId::Id_FrameFexConfig) {
+            (*(int *)arg)++;
+        }
+        return Py_None;
+    }
+
+    static PyObject *makeatoms(Xtc *xtc, void *arg)
+    {
+        xtcrdr* rdr = reinterpret_cast<xtcrdr*>(arg);
+
+        switch (xtc->contains.id()) {
+        case TypeId::Id_Epics: {
+            EpicsPvCtrlHeader *pvc = (EpicsPvCtrlHeader *)xtc->payload();
+            PyTuple_SET_ITEM(rdr->atoms, rdr->count,
+                             PyString_FromString(pvc->sPvName));
+            rdr->count++;
+            break;
+        }
+        case TypeId::Id_FrameFexConfig: {
+            PyTuple_SET_ITEM(rdr->atoms, rdr->count,
+                             PyString_FromString(DetInfo::name(*(DetInfo *)&xtc->src)));
+            rdr->count++;
+            break;
+        }
+        default:
+            break;
+        }
+        return Py_None;
+    }
+
     static PyObject* xtcrdr_open(PyObject* self, PyObject* args)
     {
         xtcrdr* rdr = reinterpret_cast<xtcrdr*>(self);
         PyObject *pyname;
+
         if (!PyArg_ParseTuple(args, "O:open", &pyname) ||
             !PyString_Check(pyname)) {
             pyca_raise_pyexc_pv("open", "cannot get XTC name", rdr);
@@ -108,44 +163,15 @@ extern "C" {
         }
         Py_XDECREF(rdr->atoms);
         rdr->count = 0;
-        Xtc *xtc = (Xtc *)(rdr->dg->xtc.payload());
-        int size = xtc->sizeofPayload();
-        xtc = (Xtc *)(xtc->payload());
-        while (size > 0) {
-            if (xtc->contains.id() == TypeId::Id_Epics ||
-                xtc->contains.id() == TypeId::Id_FrameFexConfig) {
-                rdr->count++;
-            }
-            size -= xtc->extent;
-            xtc = xtc->next();
-        }
-        rdr->atoms = PyTuple_New(rdr->count);
 
-        xtc = (Xtc *)(rdr->dg->xtc.payload());
-        size = xtc->sizeofPayload();
-        xtc = (Xtc *)(xtc->payload());
-        int i = 0;
-        while (size > 0) {
-            switch (xtc->contains.id()) {
-            case TypeId::Id_Epics: {
-                EpicsPvCtrlHeader *pvc = (EpicsPvCtrlHeader *)xtc->payload();
-                PyTuple_SET_ITEM(rdr->atoms,i,
-                                 PyString_FromString(pvc->sPvName));
-                i++;
-                break;
-            }
-            case TypeId::Id_FrameFexConfig: {
-                PyTuple_SET_ITEM(rdr->atoms,i,
-                                 PyString_FromString(DetInfo::name(*(DetInfo *)&xtc->src)));
-                i++;
-                break;
-            }
-            default:
-                break;
-            }
-            size -= xtc->extent;
-            xtc = xtc->next();
-        }
+        if (!XtcTraverse(&rdr->dg->xtc, countatoms, &rdr->count))
+            return NULL;
+
+        rdr->atoms = PyTuple_New(rdr->count);
+        rdr->count = 0;
+
+        if (!XtcTraverse(&rdr->dg->xtc, makeatoms, rdr))
+            return NULL;
         
         return xtcrdr_next((PyObject *)rdr, NULL);
     }
@@ -225,100 +251,106 @@ extern "C" {
         return ok();
     }
 
+    static PyObject *do_process(Xtc *xtc, void *arg)
+    {
+        xtcrdr* rdr = reinterpret_cast<xtcrdr*>(arg);
+
+        if (xtc->contains.id() != TypeId::Id_Epics &&
+            xtc->contains.id() != TypeId::Id_Frame)
+            return Py_None;
+
+        PyObject *pyatom = PyTuple_GET_ITEM(rdr->atoms, rdr->tcnt);
+        PyObject *pylist = PyDict_GetItem(rdr->data, pyatom);
+        rdr->tcnt++;
+
+        if (!pylist)
+            return Py_None;
+
+        int maxcnt = 0;
+
+        switch (xtc->contains.id()) {
+        case TypeId::Id_Epics: {
+            EpicsPvTime<DBR_LONG> *t = (EpicsPvTime<DBR_LONG> *)(xtc->payload());
+            rdr->ev.type = t->iDbrType;
+            maxcnt = t->iNumElements;
+            /* This probably isn't necessary, but just in case! */
+            t->stamp.secPastEpoch = rdr->ts.secPastEpoch;
+            t->stamp.nsec = rdr->ts.nsec;
+            rdr->ev.dbr = (void *)&t->status; /* First field of the dbr_time_* type */
+            break;
+        }
+        case TypeId::Id_Frame: {
+            Camera::FrameV1 *f = (Camera::FrameV1 *)(xtc->payload());
+            rdr->ev.type = DBR_TIME_SHORT;
+            maxcnt = f->width() * f->height();
+            if (rdr->dts == NULL) {
+                rdr->dts = (dbr_time_short *)malloc(sizeof(dbr_time_short) + f->data_size());
+                rdr->dts->status = 0;
+                rdr->dts->severity = 0;
+                rdr->dts->stamp.secPastEpoch = rdr->ts.secPastEpoch;
+                rdr->dts->stamp.nsec = rdr->ts.nsec;
+            }
+            memcpy(&rdr->dts->value, f->data(), maxcnt * sizeof(short));
+            rdr->ev.dbr = rdr->dts;
+            break;
+        }
+        default:
+            pyca_raise_pyexc_pv("process", "Unknown TypeID in XTC file", rdr);
+            break;
+        }
+
+        int cnt = PyList_GET_SIZE(pylist);
+        for (int j = 0; j < cnt; j++) {
+            PyObject *pyval = PyList_GET_ITEM(pylist, j);
+            capv *pv = reinterpret_cast<capv*>(pyval);
+
+            if (!pv->didmon && !pv->didget)
+                continue;
+
+            rdr->ev.usr = pv;
+            if (pv->count && pv->count < maxcnt)
+                rdr->ev.count = pv->count;
+            else
+                rdr->ev.count = maxcnt;
+
+            if (pv->didmon) {
+                Py_BEGIN_ALLOW_THREADS
+                    pyca_monitor_handler(rdr->ev);
+                Py_END_ALLOW_THREADS
+            }
+            if (pv->didget) {
+                pv->didget = 0;
+                Py_BEGIN_ALLOW_THREADS
+                    pyca_getevent_handler(rdr->ev);
+                Py_END_ALLOW_THREADS
+            }
+        }
+        return Py_None;
+    }
+
     static PyObject* xtcrdr_process(PyObject* self, PyObject* args)
     {
         xtcrdr* rdr = reinterpret_cast<xtcrdr*>(self);
-        epicsTimeStamp ts;
-        struct event_handler_args ev;
-        dbr_time_short *buf = NULL;
 
         /*
          * Create an EPICS timestamp for this event.  Make sure that the low bits
          * of the nanoseconds contain the fiducial!
          */
-        ts.secPastEpoch = rdr->dg->seq.clock().seconds() - POSIX_TIME_AT_EPICS_EPOCH;
-        ts.nsec         = rdr->dg->seq.clock().nanoseconds();
-        if ((ts.nsec & 0x1ffff) != rdr->dg->seq.stamp().fiducials()) {
-            ts.nsec &= ~0x1ffff;
-            ts.nsec |= rdr->dg->seq.stamp().fiducials();
+        rdr->ts.secPastEpoch = rdr->dg->seq.clock().seconds() - POSIX_TIME_AT_EPICS_EPOCH;
+        rdr->ts.nsec         = rdr->dg->seq.clock().nanoseconds();
+        if ((rdr->ts.nsec & 0x1ffff) != rdr->dg->seq.stamp().fiducials()) {
+            rdr->ts.nsec &= ~0x1ffff;
+            rdr->ts.nsec |= rdr->dg->seq.stamp().fiducials();
         }
 
-        ev.chid = 0;
-        ev.status = ECA_NORMAL;
-
-        Xtc *xtc = (Xtc *)(rdr->dg->xtc.payload());
-        xtc = (Xtc *)(xtc->payload());
-        for (int i = 0; i < rdr->count; i++, xtc = xtc->next()) {
-            PyObject *pyatom = PyTuple_GET_ITEM(rdr->atoms, i);
-            PyObject *pylist = PyDict_GetItem(rdr->data, pyatom);
-
-            if (!pylist)
-                continue;
-
-            int maxcnt;
-
-            switch (xtc->contains.id()) {
-            case TypeId::Id_Epics: {
-                EpicsPvTime<DBR_LONG> *t = (EpicsPvTime<DBR_LONG> *)(xtc->payload());
-                ev.type = t->iDbrType;
-                maxcnt = t->iNumElements;
-                /* This probably isn't necessary, but just in case! */
-                t->stamp.secPastEpoch = ts.secPastEpoch;
-                t->stamp.nsec = ts.nsec;
-                ev.dbr = (void *)&t->status; /* First field of the dbr_time_* type */
-                break;
-            }
-            case TypeId::Id_Frame: {
-                Camera::FrameV1 *f = (Camera::FrameV1 *)(xtc->payload());
-                ev.type = DBR_TIME_SHORT;
-                maxcnt = f->width() * f->height();
-                if (buf == NULL) {
-                    buf = (dbr_time_short *)malloc(sizeof(dbr_time_short) + f->data_size());
-                    buf->status = 0;
-                    buf->severity = 0;
-                    buf->stamp.secPastEpoch = ts.secPastEpoch;
-                    buf->stamp.nsec = ts.nsec;
-                }
-                memcpy(&buf->value, f->data(), maxcnt * sizeof(short));
-                ev.dbr = buf;
-                break;
-            }
-            default:
-                pyca_raise_pyexc_pv("process", "Unknown TypeID in XTC file", rdr);
-                break;
-            }
-
-            int cnt = PyList_GET_SIZE(pylist);
-            for (int j = 0; j < cnt; j++) {
-                PyObject *pyval = PyList_GET_ITEM(pylist, j);
-                capv *pv = reinterpret_cast<capv*>(pyval);
-
-                if (!pv->didmon && !pv->didget)
-                    continue;
-
-                ev.usr = pv;
-                if (pv->count && pv->count < maxcnt)
-                    ev.count = pv->count;
-                else
-                    ev.count = maxcnt;
-
-                if (pv->didmon) {
-                    Py_BEGIN_ALLOW_THREADS
-                        pyca_monitor_handler(ev);
-                    Py_END_ALLOW_THREADS
-                }
-                if (pv->didget) {
-                    pv->didget = 0;
-                    Py_BEGIN_ALLOW_THREADS
-                        pyca_getevent_handler(ev);
-                    Py_END_ALLOW_THREADS
-                }
-            }
+        rdr->tcnt = 0;
+        PyObject *result = XtcTraverse(&rdr->dg->xtc, do_process, rdr);
+        if (rdr->dts) {
+            delete rdr->dts;
+            rdr->dts = NULL;
         }
-        if (buf)
-            free(buf);
 
-        return ok();
+        return result ? ok() : NULL;
     }
 
     static PyObject* xtcrdr_moveto(PyObject* self, PyObject* args)
@@ -364,6 +396,10 @@ extern "C" {
         rdr->count = 0;
         rdr->buffer = 0;
         rdr->bufsiz = 0;
+
+        rdr->ev.chid = 0;
+        rdr->ev.status = ECA_NORMAL;
+        rdr->dts = NULL;
         return 0;
     }
 
@@ -389,6 +425,10 @@ extern "C" {
         if (rdr->dg) {
             delete rdr->dg;
             rdr->dg = 0;
+        }
+        if (rdr->dts) {
+            delete rdr->dts;
+            rdr->dts = NULL;
         }
         self->ob_type->tp_free(self);
     }
