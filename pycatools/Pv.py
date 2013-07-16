@@ -4,25 +4,27 @@ import sys
 import copy
 
 class Pv(pyca.capv):
-  def __init__(self, name):
+  def __init__(self, name, simulated=None):
     pyca.capv.__init__(self, name)
     self.__connection_sem = threading.Event()
-    self.__putevt_sem = threading.Event()
     self.connect_cb = self.connection_handler
-    self.putevt_cb = self.putevt_handler
-    self.__putevt_exc = None
+    self.simulated = simulated
+    if simulated != None:
+      self.data = {}
+      self.data["secs"] = 0
+      self.data["nsec"] = 0
+      self.data["value"] = 0
+    self.ismonitored = False
 
   # Channel access callbacks
   def connection_handler(self, isconnected):
     if isconnected:
       self.__connection_sem.set()
 
-  def putevt_handler(self, e=None):
-    self.__putevt_exc = e
-    self.__putevt_sem.set()
-
   # Calls to channel access methods
   def connect(self, timeout=-1.0):
+    if self.simulated != None:
+      return
     tmo = float(timeout)
     self.create_channel()
     if tmo > 0:
@@ -31,34 +33,23 @@ class Pv(pyca.capv):
         raise pyca.pyexc, "connection timedout for PV %s" %(self.name)
 
   def disconnect(self):
+    if self.simulated != None:
+      return
     self.clear_channel()
 
-  def monitor(self, mask, ctrl=False):
-    self.subscribe_channel(mask, ctrl)
+  def monitor(self, mask, ctrl=False, count=None):
+    self.subscribe_channel(mask, ctrl, count)
 
   def unsubscribe(self):
     self.unsubscribe_channel()
 
-  def get(self, ctrl=False, timeout=-1.0):
+  def get(self, ctrl=False, timeout=-1.0, count=None):
     tmo = float(timeout)
-    self.get_data(ctrl, tmo)
+    self.get_data(ctrl, tmo, count)
 
-  #
-  # Two simultaneous puts from different threads won't work with this code.
-  # If we want to support this, we need to serialize puts using a lock.
-  #
   def put(self, value, timeout=-1.0):
     tmo = float(timeout)
-    self.__putevt_exc = None
-    self.__putevt_sem.clear()
-    self.put_data(value, -1.0)
-    pyca.flush_io()
-    if tmo > 0:
-      self.__putevt_sem.wait(tmo)
-      if not self.__putevt_sem.isSet():
-        raise pyca.pyexc, "put timedout for PV %s" %(self.name)
-      elif self.__putevt_exc != None:
-        raise pyca.caexc, self.__putevt_exc
+    self.put_data(value, tmo)
     
   # Used to obtain a copy of the data which won't be overwritten by ca callbacks
   def getcopy(self):
