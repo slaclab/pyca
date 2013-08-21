@@ -1,4 +1,4 @@
-libnames := pyca xtcrdr
+libnames := pyca
 
 libsrcs_pyca := pyca.cc
 libincs_pyca := python/include/python2.5 \
@@ -7,12 +7,3 @@ libincs_pyca := python/include/python2.5 \
                 epics/include/os/Linux
 liblibs_pyca := epics/ca \
                 epics/Com
-
-libsrcs_xtcrdr := xtcrdr.cc daq.cc
-libincs_xtcrdr := python/include/python2.5 \
-		  python/include/python2.7 \
-		  daq \
-                  epics/include \
-                  epics/include/os/Linux
-liblibs_xtcrdr := epics/ca \
-                  epics/Com
