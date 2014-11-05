@@ -1,17 +1,7 @@
-# Project level makefile
-# ----------------------
-%.mk:;
+-include config
 
-# Checks
-# ------
-# Check release location variables
-ifeq ($(RELEASE_DIR),)
-export RELEASE_DIR := $(PWD)/..
-endif
+build:
+	python setup.py build
 
-# Includes
-# --------
-include $(RELEASE_DIR)/make/share/setup.mk
-include flags.mk
-include packages.mk
-include $(RELEASE_DIR)/make/share/project.mk
+install:
+	python setup.py install $(LOCATION)

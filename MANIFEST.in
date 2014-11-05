@@ -1,0 +1,4 @@
+include pyca/*.hh
+include configure
+include Makefile
+
