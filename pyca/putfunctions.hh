@@ -70,21 +70,29 @@ void _pyca_put_value(capv* pv, PyObject* pyvalue, T** buf, long count)
 
 static const void* _pyca_put_buffer(capv* pv, 
                                     PyObject* pyvalue, 
-                                    short dbr_type, 
+                                    short &dbr_type, // We may change DBF_ENUM to DBF_STRING
                                     long count)
 {
   const void* buffer;
   switch (dbr_type) {
+  case DBR_ENUM:
+    {
+      if (PyString_Check(pyvalue)) {
+	dbr_type = DBR_STRING;
+	// no break: pass into string block, below
+	// Note: We don't check if the caller passed
+	//       an integer cast as a string... Although
+	//       this seems to be handled correctly.
+      } else {
+	dbr_enum_t* buf;
+	_pyca_put_value(pv, pyvalue, &buf, count);
+	buffer = buf;
+	break;
+      }
+    }
   case DBR_STRING:
     {
       dbr_string_t* buf;
-      _pyca_put_value(pv, pyvalue, &buf, count);
-      buffer = buf;
-    }
-    break;
-  case DBR_ENUM:
-    {
-      dbr_enum_t* buf;
       _pyca_put_value(pv, pyvalue, &buf, count);
       buffer = buf;
     }

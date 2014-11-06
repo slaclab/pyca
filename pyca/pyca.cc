@@ -409,6 +409,7 @@ extern "C" {
         {"rwaccess", rwaccess, METH_VARARGS},
         {"set_string_enum", set_string_enum, METH_VARARGS},
         {"is_string_enum", is_string_enum, METH_VARARGS},
+	//	{"get_enum_strings", get_enum_strings, METH_VARARGS},
         {NULL,  NULL},
     };
 
