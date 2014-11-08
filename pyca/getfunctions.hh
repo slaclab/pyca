@@ -130,6 +130,19 @@ void _pyca_get_ctrl_double(capv* pv, const T* dbrv, long count)
   _pyca_setitem(pydata, "value",       _pyca_get_value(pv, dbrv, count));
 }
 
+static inline 
+void _pyca_get_gr_enum(capv* pv, const struct dbr_gr_enum* dbrv, long count) 
+{
+  PyObject* pydata = pv->data;
+  PyObject* enstrs = PyTuple_New(dbrv->no_str);
+  for (int i=0; i < dbrv->no_str; i++) {
+    // TODO:  This is no bueno.  We need a new accessor above for
+    //        char arrays...  
+    PyTuple_SET_ITEM(enstrs, i, _pyca_get(dbrv->strs[i]));
+  }
+  _pyca_setitem(pydata, "enum_set", enstrs);
+}
+
 static const void* _pyca_event_process(capv* pv, 
                                        const void* buffer, 
                                        short dbr_type, 
@@ -137,6 +150,9 @@ static const void* _pyca_event_process(capv* pv,
 {
   const db_access_val* dbr = reinterpret_cast<const db_access_val*>(buffer);
   switch (dbr_type) {
+  case DBR_GR_ENUM:
+    _pyca_get_gr_enum(pv, &dbr->genmval, count);
+    break;
   case DBR_TIME_STRING:
     _pyca_get_time(pv, &dbr->tstrval, count);
     break;

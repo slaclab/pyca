@@ -133,6 +133,61 @@ extern "C" {
         return ok();
     }
 
+    static PyObject* get_enum_strings(PyObject* self, PyObject* args)
+    {
+        capv* pv = reinterpret_cast<capv*>(self);
+        PyObject* pytmo;
+
+        if (!PyArg_ParseTuple(args, "O:get_enum_set", &pytmo) ||
+            !PyFloat_Check(pytmo)
+            ) 
+	{
+            pyca_raise_pyexc_pv("get_enum_strings", "error parsing arguments", pv);
+        }
+
+        chid cid = pv->cid;
+        if (!cid) {
+            pyca_raise_pyexc_pv("get_enum_strings", "channel is null", pv);
+        }
+
+        short type = ca_field_type(cid);
+        if (pv->count == 0 || type == TYPENOTCONN) {
+            pyca_raise_caexc_pv("ca_field_type", ECA_DISCONNCHID, pv);
+        }
+
+	if (!dbr_type_is_ENUM(dbf_type_to_DBR(type))) {
+            pyca_raise_pyexc_pv("get_enum_strings", "channel is not ENUM type", pv);
+	}
+	int result;
+	double timeout = PyFloat_AsDouble(pytmo);
+        if (timeout < 0) {
+	  result = ca_array_get_callback(DBR_GR_ENUM,
+					 1,
+					 cid,
+					 pyca_getevent_handler,
+					 pv);
+	  if (result != ECA_NORMAL) {
+	    pyca_raise_caexc_pv("ca_array_get_callback", result, pv);
+	  }
+	} else {
+	  struct dbr_gr_enum buffer;
+	  result = ca_array_get (DBR_GR_ENUM, 1, cid, &buffer);
+	  if (result != ECA_NORMAL) {
+	    pyca_raise_caexc_pv("ca_array_get", result, pv);
+	  }
+	  Py_BEGIN_ALLOW_THREADS
+	  result = ca_pend_io(timeout);
+	  Py_END_ALLOW_THREADS
+          if (result != ECA_NORMAL) {
+	    pyca_raise_caexc_pv("ca_pend_io", result, pv);
+	  }      
+	  if (!_pyca_event_process(pv, &buffer, DBR_GR_ENUM, 1)) {
+	    pyca_raise_pyexc_pv("get_enum_strings", "un-handled type", pv);
+	  }
+	}
+	return ok();
+    }
+
     static PyObject* get_data(PyObject* self, PyObject* args)
     {
         capv* pv = reinterpret_cast<capv*>(self);
@@ -409,7 +464,7 @@ extern "C" {
         {"rwaccess", rwaccess, METH_VARARGS},
         {"set_string_enum", set_string_enum, METH_VARARGS},
         {"is_string_enum", is_string_enum, METH_VARARGS},
-	//	{"get_enum_strings", get_enum_strings, METH_VARARGS},
+	{"get_enum_strings", get_enum_strings, METH_VARARGS},
         {NULL,  NULL},
     };
 
