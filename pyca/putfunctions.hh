@@ -50,7 +50,11 @@ void _pyca_put_value(capv* pv, PyObject* pyvalue, T** buf, long count)
   }
   T* buffer = reinterpret_cast<T*>(pv->putbuffer);
   if (count == 1) {
-    _pyca_put(pyvalue, buffer);
+      if (PyTuple_Check(pyvalue)) {
+        PyObject* pyval = PyTuple_GetItem(pyvalue, 0);
+        _pyca_put(pyval, buffer);
+      } else
+        _pyca_put(pyvalue, buffer);
   } else {
 //     Py_ssize_t len = PyTuple_Size(pyvalue);
 //     if (len != count) {
