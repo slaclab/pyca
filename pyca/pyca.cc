@@ -291,6 +291,13 @@ extern "C" {
         if (count == 0 || type == TYPENOTCONN) {
             pyca_raise_caexc_pv("ca_field_type", ECA_DISCONNCHID, pv);
         }
+        if (count > 1) {
+            if (PyTuple_Check(pyval)) {
+                int tcnt = PyTuple_GET_SIZE(pyval);
+                if (tcnt < count)
+                    count = tcnt;
+            }
+        }
         short dbr_type = dbf_type_to_DBR(type);
         const void* buffer = _pyca_put_buffer(pv, pyval, dbr_type, count);
         if (!buffer) {
