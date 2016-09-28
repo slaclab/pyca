@@ -47,6 +47,54 @@ static inline PyObject* _pyca_get(const dbr_double_t value)
 
 typedef void (*processptr)(const void* cadata, long count, size_t size, void* descr);
 
+// EPICS      Description                Numpy
+// DBR_STRING 40 character string`       NPY_STRING
+// DBR_ENUM   16-bit unsigned integer    NPY_UINT16
+// DBR_CHAR   8-bit character            NPY_UINT8
+// DBR_SHORT  16-bit integer             NPY_INT16
+// DBR_LONG   32-bit signed integer      NPY_INT32
+// DBR_FLOAT  32-bit IEEE floating point NPY_FLOAT32
+// DBR_DOUBLE 64-bit IEEE floating pint  NPY_FLOAT64
+int _numpy_array_type(const dbr_string_t*)
+{
+  return NPY_STRING;
+}
+
+int _numpy_array_type(const dbr_enum_t*)
+{
+  return NPY_UINT16;
+}
+
+int _numpy_array_type(const dbr_char_t*)
+{
+  return NPY_UINT8;
+}
+
+int _numpy_array_type(const dbr_short_t*)
+{
+  return NPY_INT16;
+}
+
+int _numpy_array_type(const dbr_ulong_t*)
+{
+  return NPY_UINT32;
+}
+
+int _numpy_array_type(const dbr_long_t*)
+{
+  return NPY_INT32;
+}
+
+int _numpy_array_type(const dbr_float_t*)
+{
+  return NPY_FLOAT32;
+}
+
+int _numpy_array_type(const dbr_double_t*)
+{
+  return NPY_FLOAT64;
+}
+
 template<class T> static inline 
 PyObject* _pyca_get_value(capv* pv, const T* dbrv, long count)
 {
@@ -54,12 +102,20 @@ PyObject* _pyca_get_value(capv* pv, const T* dbrv, long count)
     return _pyca_get(dbrv->value);
   } else {
     if (!pv->processor) {
-      PyObject* pytup = PyTuple_New(count);
-      for (long i=0; i<count; i++) {
-        // Following function steals reference, no DECREF needed for each item
-        PyTuple_SetItem(pytup, i, _pyca_get(*(&(dbrv->value)+i)));
+      if (PyObject_IsTrue(pv->use_numpy)) {
+        npy_intp dims[1] = {count};
+        int typenum = _numpy_array_type(&(dbrv->value));
+        PyObject* nparray = PyArray_EMPTY(1, dims, typenum, 0);
+        memcpy(PyArray_DATA(nparray), &(dbrv->value), count*sizeof(dbrv->value));
+        return nparray;
+      } else {
+        PyObject* pytup = PyTuple_New(count);
+        for (long i=0; i<count; i++) {
+          // Following function steals reference, no DECREF needed for each item
+          PyTuple_SetItem(pytup, i, _pyca_get(*(&(dbrv->value)+i)));
+        }
+        return pytup;
       }
-      return pytup;
     } else {
       processptr process = (processptr)PyCObject_AsVoidPtr(pv->processor);
       void* descr = PyCObject_GetDesc(pv->processor);

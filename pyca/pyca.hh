@@ -9,6 +9,7 @@ struct capv {
   PyObject* getevt_cb; // event callback
   PyObject* putevt_cb; // event callback
   PyObject* simulated; // None if real PV, otherwise just simulated.
+  PyObject* use_numpy; // True to use numpy array instead of tuple
   chid cid;            // channel access ID  
   char* getbuffer;     // buffer for received data
   unsigned getbufsiz;  // received data buffer size

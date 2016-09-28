@@ -1,4 +1,5 @@
 #include <Python.h>
+#include <numpy/arrayobject.h>
 #include <stdio.h>
 #include <structmember.h>
 
@@ -393,6 +394,8 @@ extern "C" {
         return ok();
     }
 
+    bool numpy_arrays = false;
+
     // Built-in methods for the capv type
     static int capv_init(PyObject* self, PyObject* args, PyObject* kwds)
     {
@@ -409,6 +412,12 @@ extern "C" {
         pv->putevt_cb = 0;
         pv->simulated = Py_None;
         Py_INCREF(pv->simulated);
+        if (numpy_arrays) {
+            pv->use_numpy = Py_True;
+        } else {
+            pv->use_numpy = Py_False;
+        }
+        Py_INCREF(pv->use_numpy);
         pv->cid = 0;
         pv->getbuffer = 0;
         pv->getbufsiz = 0;
@@ -485,6 +494,7 @@ extern "C" {
         {"getevt_cb", T_OBJECT_EX, offsetof(capv, getevt_cb), 0, "getevt_cb"},
         {"putevt_cb", T_OBJECT_EX, offsetof(capv, putevt_cb), 0, "putevt_cb"},
         {"simulated", T_OBJECT_EX, offsetof(capv, simulated), 0, "simulated"},
+        {"use_numpy", T_OBJECT_EX, offsetof(capv, use_numpy), 0, "use_numpy"},
         {NULL}
     };
 
@@ -561,7 +571,18 @@ extern "C" {
 
         return ok();
     }
-	        
+        
+    static PyObject* new_context(PyObject*, PyObject*) {
+        // use to create context for multiprocessing module
+        // if this process already has a context, skip
+        ca_detach_context();
+        int result = ca_context_create(ca_enable_preemptive_callback);
+        if (result != ECA_NORMAL) {
+            pyca_raise_caexc("ca_context_create", result);
+        }
+        return ok();
+    }
+
     static PyObject* pend_io(PyObject*, PyObject* args) {
         PyObject* pytmo;
         int result;
@@ -604,14 +625,26 @@ extern "C" {
         return ok();
     }    
 
+    static PyObject* set_numpy(PyObject*, PyObject* args) {
+        PyObject* np;
+        if (!PyArg_ParseTuple(args, "O:use_numpy", &np) ||
+            !PyBool_Check(np)) {
+            pyca_raise_pyexc("use_numpy", "error parsing arguments");
+        }
+        numpy_arrays = PyObject_IsTrue(np);
+        return ok();
+    }
+
     // Register module methods
     static PyMethodDef pyca_methods[] = {
         {"attach_context", attach_context, METH_VARARGS},
+        {"new_context", new_context, METH_VARARGS},
         {"initialize", initialize, METH_VARARGS},
         {"finalize", finalize, METH_VARARGS},
         {"pend_io", pend_io, METH_VARARGS},
         {"flush_io", flush_io, METH_VARARGS},
         {"pend_event", pend_event, METH_VARARGS},
+        {"set_numpy", set_numpy, METH_VARARGS},
         {NULL, NULL}
     };
   
@@ -648,6 +681,7 @@ extern "C" {
     // Initialize python module
     void initpyca()
     {
+        import_array()
         if (PyType_Ready(&capv_type) < 0) {
             return;
         }

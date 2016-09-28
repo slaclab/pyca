@@ -38,6 +38,15 @@ static inline void _pyca_put(PyObject* pyvalue, dbr_double_t* buf)
   *buf = PyFloat_AsDouble(pyvalue);
 }
 
+// If using correct numpy type, there is nothing special to do.
+// Note we still risk corrupt data if we mismatch numpy data types, but this
+// should never happen unless the python user is malicious.
+template<class T> static inline
+void _pyca_put_np(void* npdata, T* buf)
+{
+  memcpy(buf, npdata, sizeof(T));
+}
+
 // Copy python objects into channel access void* buffer
 template<class T> static inline 
 void _pyca_put_value(capv* pv, PyObject* pyvalue, T** buf, long count)
@@ -53,16 +62,38 @@ void _pyca_put_value(capv* pv, PyObject* pyvalue, T** buf, long count)
       if (PyTuple_Check(pyvalue)) {
         PyObject* pyval = PyTuple_GetItem(pyvalue, 0);
         _pyca_put(pyval, buffer);
-      } else
+      } else if (PyArray_Check(pyvalue)) {
+        void* npdata = PyArray_GETPTR1(pyvalue, 0);
+        if (PyArray_IsPythonScalar(pyvalue)) {
+          PyObject* pyval = PyArray_GETITEM(pyvalue, npdata);
+          _pyca_put(pyval, buffer);
+        } else {
+          _pyca_put_np(npdata, buffer);
+        }
+      } else {
         _pyca_put(pyvalue, buffer);
+      }
   } else {
 //     Py_ssize_t len = PyTuple_Size(pyvalue);
 //     if (len != count) {
 //       pyca_raise_pyexc_pv("put_data", "value doesn't match pv length", pv);
 //     }
-    for (long i=0; i<count; i++) {
-      PyObject* pyval = PyTuple_GetItem(pyvalue, i);
-      _pyca_put(pyval, buffer+i);
+    if (PyTuple_Check(pyvalue)) {
+      for (long i=0; i<count; i++) {
+        PyObject* pyval = PyTuple_GetItem(pyvalue, i);
+        _pyca_put(pyval, buffer+i);
+      }
+    } else if (PyArray_Check(pyvalue)) {
+      bool py_type = PyArray_IsPythonScalar(pyvalue);
+      for (long i=0; i<count; i++) {
+        void* npdata = PyArray_GETPTR1(pyvalue, i);
+        if (py_type) {
+          PyObject* pyval = PyArray_GETITEM(pyvalue, npdata);
+          _pyca_put(pyval, buffer+i);
+        } else {
+          _pyca_put_np(npdata, buffer+i);
+        }
+      }
     }
   }
   if (PyErr_ExceptionMatches(PyExc_TypeError)) {
