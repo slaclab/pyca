@@ -681,7 +681,7 @@ extern "C" {
     // Initialize python module
     void initpyca()
     {
-        import_array()
+        import_array();
         if (PyType_Ready(&capv_type) < 0) {
             return;
         }
