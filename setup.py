@@ -35,7 +35,7 @@ pyca = Extension('pyca', language = 'c++', sources = ['pyca/pyca.cc'],
                  library_dirs=libdirs,
                  libraries=['Com', 'ca'])
 
-setup(name='pyca', version='2.2.0',
+setup(name='pyca', version='2.3.0',
       description='python channel access library',
       ext_modules=[pyca], url='https://confluence.slac.stanford.edu/display/PCDS/Using+pyca',
       author='Amedeo Perazzo', author_email='amedeo@slac.stanford.edu')
