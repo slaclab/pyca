@@ -2,6 +2,7 @@
 #include <numpy/arrayobject.h>
 #include <stdio.h>
 #include <structmember.h>
+#include <map>
 
 #include <cadef.h>
 #include <alarm.h>
@@ -51,7 +52,7 @@ extern "C" {
             pyca_raise_caexc_pv("ca_clear_channel", result, pv);
         }
         pv->cid = 0;
-	return ok();
+        return ok();
     }
 
     static PyObject* subscribe_channel(PyObject* self, PyObject* args)
@@ -142,7 +143,7 @@ extern "C" {
         if (!PyArg_ParseTuple(args, "O:get_enum_set", &pytmo) ||
             !PyFloat_Check(pytmo)
             ) 
-	{
+        {
             pyca_raise_pyexc_pv("get_enum_strings", "error parsing arguments", pv);
         }
 
@@ -156,37 +157,37 @@ extern "C" {
             pyca_raise_caexc_pv("ca_field_type", ECA_DISCONNCHID, pv);
         }
 
-	if (!dbr_type_is_ENUM(dbf_type_to_DBR(type))) {
+        if (!dbr_type_is_ENUM(dbf_type_to_DBR(type))) {
             pyca_raise_pyexc_pv("get_enum_strings", "channel is not ENUM type", pv);
-	}
-	int result;
-	double timeout = PyFloat_AsDouble(pytmo);
+        }
+        int result;
+        double timeout = PyFloat_AsDouble(pytmo);
         if (timeout < 0) {
-	  result = ca_array_get_callback(DBR_GR_ENUM,
-					 1,
-					 cid,
-					 pyca_getevent_handler,
-					 pv);
-	  if (result != ECA_NORMAL) {
-	    pyca_raise_caexc_pv("ca_array_get_callback", result, pv);
-	  }
-	} else {
-	  struct dbr_gr_enum buffer;
-	  result = ca_array_get (DBR_GR_ENUM, 1, cid, &buffer);
-	  if (result != ECA_NORMAL) {
-	    pyca_raise_caexc_pv("ca_array_get", result, pv);
-	  }
-	  Py_BEGIN_ALLOW_THREADS
-	  result = ca_pend_io(timeout);
-	  Py_END_ALLOW_THREADS
+          result = ca_array_get_callback(DBR_GR_ENUM,
+                                         1,
+                                         cid,
+                                         pyca_getevent_handler,
+                                         pv);
           if (result != ECA_NORMAL) {
-	    pyca_raise_caexc_pv("ca_pend_io", result, pv);
-	  }      
-	  if (!_pyca_event_process(pv, &buffer, DBR_GR_ENUM, 1)) {
-	    pyca_raise_pyexc_pv("get_enum_strings", "un-handled type", pv);
-	  }
-	}
-	return ok();
+            pyca_raise_caexc_pv("ca_array_get_callback", result, pv);
+          }
+        } else {
+          struct dbr_gr_enum buffer;
+          result = ca_array_get (DBR_GR_ENUM, 1, cid, &buffer);
+          if (result != ECA_NORMAL) {
+            pyca_raise_caexc_pv("ca_array_get", result, pv);
+          }
+          Py_BEGIN_ALLOW_THREADS
+          result = ca_pend_io(timeout);
+          Py_END_ALLOW_THREADS
+          if (result != ECA_NORMAL) {
+            pyca_raise_caexc_pv("ca_pend_io", result, pv);
+          }      
+          if (!_pyca_event_process(pv, &buffer, DBR_GR_ENUM, 1)) {
+            pyca_raise_pyexc_pv("get_enum_strings", "un-handled type", pv);
+          }
+        }
+        return ok();
     }
 
     static PyObject* get_data(PyObject* self, PyObject* args)
@@ -394,7 +395,7 @@ extern "C" {
         return ok();
     }
 
-    bool numpy_arrays = false;
+    static bool numpy_arrays = false;
 
     // Built-in methods for the capv type
     static int capv_init(PyObject* self, PyObject* args, PyObject* kwds)
@@ -480,7 +481,7 @@ extern "C" {
         {"rwaccess", rwaccess, METH_VARARGS},
         {"set_string_enum", set_string_enum, METH_VARARGS},
         {"is_string_enum", is_string_enum, METH_VARARGS},
-	{"get_enum_strings", get_enum_strings, METH_VARARGS},
+        {"get_enum_strings", get_enum_strings, METH_VARARGS},
         {NULL,  NULL},
     };
 
@@ -557,28 +558,47 @@ extern "C" {
         return ok();
     }
 
-    static ca_client_context *ca_context = 0;
+    // Each process needs a unique context.
+    static std::map<pid_t, ca_client_context*> ca_context_map;
 
+    static bool has_proc_context() {
+        return ca_context_map.count(::getpid()) == 1;
+    }
+
+    static void save_proc_context() {
+        ca_context_map[::getpid()] = ca_current_context();
+    }
+
+    static ca_client_context* get_proc_context() {
+        return ca_context_map[::getpid()];
+    }
+
+    // Each thread needs the same context as the process that spawned it
     static PyObject* attach_context(PyObject* self, PyObject* args) {
         // only failure modes are if it's already attached or single threaded, 
         // so no need to raise an exception
         if (ca_current_context() == NULL) {
-            int res = ca_attach_context(ca_context);
-            if (res != ECA_NORMAL) {
+            if (!has_proc_context()) {
+                pyca_raise_pyexc("attach_context", "no context to attach");
+            }
+            int result = ca_attach_context(get_proc_context());
+            if (result != ECA_NORMAL) {
                 pyca_raise_pyexc("attach_context", "attach error");
             }
         }
-
         return ok();
     }
-        
+ 
     static PyObject* new_context(PyObject*, PyObject*) {
         // use to create context for multiprocessing module
         // if this process already has a context, skip
-        ca_detach_context();
-        int result = ca_context_create(ca_enable_preemptive_callback);
-        if (result != ECA_NORMAL) {
-            pyca_raise_caexc("ca_context_create", result);
+        if (!has_proc_context()) {
+            ca_detach_context();
+            int result = ca_context_create(ca_enable_preemptive_callback);
+            if (result != ECA_NORMAL) {
+                pyca_raise_caexc("ca_context_create", result);
+            }
+            save_proc_context();
         }
         return ok();
     }
@@ -725,7 +745,7 @@ extern "C" {
 
         // Add capv type to this module
         Py_INCREF(&capv_type);
-	PyModule_AddObject(module, "capv", (PyObject*)&capv_type);
+        PyModule_AddObject(module, "capv", (PyObject*)&capv_type);
 
         // Add custom exceptions to this module
         pyca_pyexc = PyErr_NewException("pyca.pyexc", NULL, NULL);
@@ -736,14 +756,14 @@ extern "C" {
         PyModule_AddObject(module, "caexc", pyca_caexc);
 
         PyEval_InitThreads();
-        if (!ca_context) {
+        if (!has_proc_context()) {
             int result = ca_context_create(ca_enable_preemptive_callback);
             if (result != ECA_NORMAL) {
                 fprintf(stderr, 
                         "*** initpyca: ca_context_create failed with status %d\n", 
                         result);
             } else {
-	      ca_context = ca_current_context();
+                save_proc_context();
                 // The following seems to cause a segfault at exit
                 // Py_AtExit(ca_context_destroy);
             }
