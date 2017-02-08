@@ -153,7 +153,7 @@ extern "C" {
         }
 
         short type = ca_field_type(cid);
-        if (pv->count == 0 || type == TYPENOTCONN) {
+        if (type == TYPENOTCONN) {
             pyca_raise_caexc_pv("ca_field_type", ECA_DISCONNCHID, pv);
         }
 
