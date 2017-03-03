@@ -1,10 +1,10 @@
 from distutils.core import setup, Extension
 import os
+import numpy as np
 
 os.environ['CC'] = 'g++'
 epics_inc = os.getenv("EPICS_BASE") + "/include"
 epics_lib = os.getenv("EPICS_BASE") + "/lib"
-numpy_inc = os.getenv("NUMPY_BASE") + "/core/include"
 
 #
 # OK, we're trying to be all things to all people here.
@@ -31,7 +31,8 @@ except:
     pass
 
 pyca = Extension('pyca', language = 'c++', sources = ['pyca/pyca.cc'],
-                 include_dirs=['pyca', epics_inc, epics_inc + '/os/Linux', numpy_inc],
+                 include_dirs=['pyca', epics_inc, epics_inc + '/os/Linux',
+                               np.get_include()],
                  library_dirs=libdirs,
                  libraries=['Com', 'ca'])
 
