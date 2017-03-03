@@ -10,12 +10,12 @@ build:
 
 requirements:
   build:
-    - python {{PY_VER}},<3
+    - python {{PY_VER}}*,<3
     - epics-base
     - numpy
 
   run:
-    - python {{PY_VER}},<3
+    - python {{PY_VER}}*,<3
     - epics-base
     - numpy
 
