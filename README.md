@@ -6,6 +6,4 @@ This module was imported from an old svn repository and was previously used only
 
 ### todo list
 - cleaner documentation
-- clean up setup.py
-- conda-recipe
 - Python 3 compatibility

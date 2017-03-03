@@ -1,0 +1,25 @@
+package:
+  name: pyca
+  version: "2.3.1"
+
+source:
+  path: ..
+
+build:
+  number: 1
+
+requirements:
+  build:
+    - python {{PY_VER}}*,<3
+    - epics-base
+    - numpy
+
+  run:
+    - python {{PY_VER}}*,<3
+    - epics-base
+    - numpy
+
+about:
+  home: https://github.com/slaclab/pyca
+  licence: SLAC Open Licence
+  summary: Python Channel Access
