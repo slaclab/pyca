@@ -51,6 +51,25 @@ static void pyca_monitor_handler(struct event_handler_args args)
   PyGILState_Release(gstate);
 }
 
+static void pyca_access_rights_handler(struct access_rights_handler_args args)
+{
+    capv* pv = reinterpret_cast<capv*>(ca_puser(args.chid));
+    long readable = args.ar.read_access;
+    long writeable = args.ar.write_access;
+    PyGILState_STATE gstate = PyGILState_Ensure();
+    if (pv->rwaccess_cb && PyCallable_Check(pv->rwaccess_cb)) {
+      PyObject* pyreadable = PyBool_FromLong(readable);
+      PyObject* pywriteable = PyBool_FromLong(writeable);
+      PyObject* rwtup = PyTuple_New(2);
+      PyTuple_SET_ITEM(rwtup, 0, pyreadable);
+      PyTuple_SET_ITEM(rwtup, 1, pywriteable);
+      PyObject* res = PyObject_Call(pv->rwaccess_cb, rwtup, NULL);
+      Py_XDECREF(res);
+      Py_DECREF(rwtup);
+    }
+    PyGILState_Release(gstate);
+}
+
 // - get data events
 static void pyca_getevent_handler(struct event_handler_args args)
 {
