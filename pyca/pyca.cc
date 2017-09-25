@@ -135,6 +135,17 @@ extern "C" {
         return ok();
     }
 
+    static PyObject* replace_access_rights_event(PyObject* self, PyObject* args)
+    {
+        capv* pv = reinterpret_cast<capv*>(self);
+        chid cid = pv->cid;
+        int result = ca_replace_access_rights_event(cid, pyca_access_rights_handler);
+        if (result != ECA_NORMAL) {
+            pyca_raise_caexc_pv("replace_access_rights_event", result, pv);
+        }
+        return ok();
+    }
+
     static PyObject* get_enum_strings(PyObject* self, PyObject* args)
     {
         capv* pv = reinterpret_cast<capv*>(self);
@@ -409,6 +420,7 @@ extern "C" {
         pv->processor = 0;
         pv->connect_cb = 0;
         pv->monitor_cb = 0;
+        pv->rwaccess_cb = 0;
         pv->getevt_cb = 0;
         pv->putevt_cb = 0;
         pv->simulated = Py_None;
@@ -479,6 +491,7 @@ extern "C" {
         {"count", count, METH_VARARGS},
         {"type", type, METH_VARARGS},
         {"rwaccess", rwaccess, METH_VARARGS},
+        {"replace_access_rights_event", replace_access_rights_event, METH_VARARGS},
         {"set_string_enum", set_string_enum, METH_VARARGS},
         {"is_string_enum", is_string_enum, METH_VARARGS},
         {"get_enum_strings", get_enum_strings, METH_VARARGS},
@@ -492,6 +505,7 @@ extern "C" {
         {"processor", T_OBJECT_EX, offsetof(capv, processor), 0, "processor"},
         {"connect_cb", T_OBJECT_EX, offsetof(capv, connect_cb), 0, "connect_cb"},
         {"monitor_cb", T_OBJECT_EX, offsetof(capv, monitor_cb), 0, "monitor_cb"},
+        {"rwaccess_cb", T_OBJECT_EX, offsetof(capv, rwaccess_cb), 0, "rwaccess_cb"},
         {"getevt_cb", T_OBJECT_EX, offsetof(capv, getevt_cb), 0, "getevt_cb"},
         {"putevt_cb", T_OBJECT_EX, offsetof(capv, putevt_cb), 0, "putevt_cb"},
         {"simulated", T_OBJECT_EX, offsetof(capv, simulated), 0, "simulated"},
