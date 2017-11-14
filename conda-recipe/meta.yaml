@@ -1,9 +1,9 @@
-{% set data = load_setup_py_data() %}
+{% set VERSION = '2.3.2' %}
 {% set EPICS = '3.14.12.6' %}
 
 package:
   name: pyca
-  version: {{ data.get('version') }}
+  version: {{ VERSION }}
 
 source:
   path: ..
