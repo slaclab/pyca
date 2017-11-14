@@ -21,7 +21,7 @@ pyca = Extension('pyca',
                  library_dirs=[epics_lib],
                  libraries=['Com', 'ca'])
 
-setup(name='pyca', version='2.3.1',
+setup(name='pyca', version='2.3.2',
       description='python channel access library',
       ext_modules=[pyca], url='https://confluence.slac.stanford.edu/display/PCDS/Using+pyca',
       author='Amedeo Perazzo', author_email='amedeo@slac.stanford.edu')
