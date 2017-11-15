@@ -44,7 +44,7 @@ def test_subscribe(pvname):
     pv.create_channel()
     pv.connect_cb.wait(timeout=1)
     # Just make sure nothing bad happens
-    pv.subscribe_channel()
+    pv.subscribe_channel(pyca.DBE_VALUE | pyca.DBE_LOG | pyca.DBE_ALARM, False)
     time.sleep(1)
 
 
