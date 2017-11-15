@@ -12,6 +12,7 @@ test_pvs = dict(
     #dbr_float_t=None,
     dbr_double_t='XPP:USR:MMS:01')
 
+
 class ConnectCallback(object):
     def __init__(self):
         self.connected = False
@@ -49,6 +50,7 @@ class GetCallback(object):
     def __call__(self, exception=None):
         if exception is None:
             self.gev.set()
+
 
 @pytest.fixture(scope='function')
 def waveform_pv():

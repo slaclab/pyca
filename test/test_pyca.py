@@ -4,6 +4,7 @@ import numpy as np
 import pyca
 from conftest import test_pvs, ConnectCallback, GetCallback
 
+
 @pytest.mark.parametrize('pvname', test_pvs.values())
 def test_create_and_clear_channel(pvname):
     pv = pyca.capv(pvname)
