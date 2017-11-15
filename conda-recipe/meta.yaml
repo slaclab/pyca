@@ -16,12 +16,12 @@ requirements:
   build:
     - python {{PY_VER}}*,<3
     - setuptools
-    - epics-base {{EPICS}}
+    - epics-base {{EPICS}}*
     - numpy
 
   run:
     - python {{PY_VER}}*,<3
-    - epics-base {{EPICS}}
+    - epics-base {{EPICS}}*
     - numpy
 
 tests:
