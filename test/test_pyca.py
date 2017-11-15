@@ -28,9 +28,7 @@ def test_get_data(pvname):
     # get time vars
     pv.get_data(False, 1.0)
     # check that the data has all the keys
-    all_keys = ('status', 'warn_llim', 'severity', 'alarm_hlim', 'warn_hlim',
-                'alarm_llim', 'precision', 'value', 'display_llim', 'secs',
-                'nsec', 'ctrl_llim', 'units', 'ctrl_hlim', 'display_hlim')
+    all_keys = ('status', 'value', 'secs', 'nsec')
     for key in all_keys:
         assert key in pv.data
     # check that value is not None
