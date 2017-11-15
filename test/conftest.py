@@ -50,7 +50,7 @@ class GetCallback(object):
         if exception is None:
             self.gev.set()
 
-@pytest.fixture(scope='function'):
+@pytest.fixture(scope='function')
 def waveform_pv():
     pv = pyca.capv(INSERTNAMEHERE)
     pv.connection_handler = ConnectCallback()
