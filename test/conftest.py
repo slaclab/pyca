@@ -52,7 +52,7 @@ class GetCallback(object):
 
 @pytest.fixture(scope='function')
 def waveform_pv():
-    pv = pyca.capv(INSERTNAMEHERE)
+    pv = pyca.capv('XPP:USR:MMS:01.LOGA')
     pv.connect_cb = ConnectCallback()
     pv.getevt_cb = GetCallback()
     return pv
