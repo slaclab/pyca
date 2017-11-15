@@ -1,4 +1,5 @@
 import time
+import threading
 import pytest
 import numpy as np
 import pyca
@@ -68,7 +69,7 @@ def test_waveform(waveform_pv):
     waveform_pv.connect_cb.wait(timeout=1)
     # Do as a tuple
     waveform_pv.use_numpy = False
-    waveform_pv.get_data(False, 1.0)
+    waveform_pv.get_data(False, 0.0)
     waveform_pv.getevt_cb.wait(timeout=1)
     val = waveform_pv.data['value']
     assert isinstance(val, tuple)
@@ -76,8 +77,22 @@ def test_waveform(waveform_pv):
     waveform_pv.getevt_cb.reset()
     # Do as a np.ndarray
     waveform_pv.use_numpy = True
-    waveform_pv.get_data(False, 1.0)
+    waveform_pv.get_data(False, 0.0)
     waveform_pv.getevt_cb.wait(timeout=1)
     val = waveform_pv.data['value']
     assert isinstance(val, np.ndarray)
     assert len(val) == waveform_pv.count()
+
+
+def test_threads(waveform_pv):
+    def some_thread_thing(pv):
+        pyca.attach_context()
+        pv.create_channel()
+        pv.connect_cb.wait(timeout=1)
+        pv.get_data(False, 0.0)
+        pv.getevt_cb.wait(timeout=1)
+
+    thread = threading.Thread(target=some_thread_thing, args=(waveform_pv,))
+    thread.start()
+    thread.join()
+    assert isinstance(waveform_pv.data['value'], tuple)
