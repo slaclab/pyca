@@ -23,10 +23,11 @@ def test_get_data(pvname):
     pv.getevt_cb = GetCallback()
     pv.create_channel()
     pv.connect_cb.wait(timeout=1)
-    # get ctrl vars
-    pv.get_data(True, 1.0)
     # get time vars
     pv.get_data(False, 1.0)
+    if not isinstance(pv.data['value'], str):
+        # get ctrl vars
+        pv.get_data(True, 1.0)
     # check that the data has all the keys
     all_keys = ('status', 'value', 'secs', 'nsec')
     for key in all_keys:
