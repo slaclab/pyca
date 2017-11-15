@@ -75,5 +75,6 @@ def test_waveform(waveform_pv):
     waveform_pv.use_numpy = True
     waveform_pv.get_data(False, 1.0)
     waveform_pv.getevt_cb.wait(timeout=1)
+    val = waveform_pv.data['value']
     assert isinstance(val, np.ndarray)
     assert len(val) == waveform_pv.count()
