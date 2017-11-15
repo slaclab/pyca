@@ -11,9 +11,11 @@ def test_create_and_clear_channel(pvname):
     pv.create_channel()
     pv.connect_cb.wait(timeout=1)
     assert pv.connect_cb.connected
+    # No callbacks on dc
     pv.clear_channel()
-    pv.connect_cb.wait_dc(timeout=1)
-    assert not pv.connect_cb.connected
+    time.sleep(1)
+    with pytest.raises(pyca.pyexc):
+        pv.get_data()
 
 
 @pytest.mark.parametrize('pvname', test_pvs.values())
