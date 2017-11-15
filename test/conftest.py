@@ -53,6 +53,6 @@ class GetCallback(object):
 @pytest.fixture(scope='function')
 def waveform_pv():
     pv = pyca.capv(INSERTNAMEHERE)
-    pv.connection_handler = ConnectCallback()
-    pv.getevent_handler = GetCallback()
+    pv.connect_cb = ConnectCallback()
+    pv.getevt_cb = GetCallback()
     return pv
