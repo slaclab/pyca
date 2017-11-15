@@ -64,10 +64,15 @@ def test_waveform(waveform_pv):
     waveform_pv.connect_cb.wait(timeout=1)
     # Do as a tuple
     waveform_pv.use_numpy = False
+    waveform_pv.get_data()
+    waveform_pv.getevt_cb.wait(timeout=1)
     val = waveform_pv.data['value']
     assert isinstance(val, tuple)
     assert len(val) == waveform_pv.count()
+    waveform_pv.getevt_cb.reset()
     # Do as a np.ndarray
     waveform_pv.use_numpy = True
+    waveform_pv.get_data()
+    waveform_pv.getevt_cb.wait(timeout=1)
     assert isinstance(val, np.ndarray)
     assert len(val) == waveform_pv.count()
