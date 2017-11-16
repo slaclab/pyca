@@ -443,7 +443,7 @@ the request to be delivered to an IOC.
 
 pyca.capv methods you can override:
 
-1.  .connection_handler( self, is_connected )
+1.  .connect_cb( self, is_connected )
 
     Called when the connection status of the capv instance changes.
     'is_connected' is a boolean indicating the new state of the
@@ -454,7 +454,7 @@ pyca.capv methods you can override:
     When a previously connected PV disconnects, this method will be
     called with is_connected set to False.
 
-2.  .monitor_handler( self, exception=None )
+2.  .monitor_cb( self, exception=None )
 
     Called when the state of the PV changes.  The state change
     detected is specified by the 'mask' argument to
@@ -468,6 +468,6 @@ pyca.capv methods you can override:
     The items in the instance's 'data' dictionary will be updated with
     the PV's new status information.
 
-3.  .getevent_handler( self, exception=None )
+3.  .getevt_cb( self, exception=None )
 
     Called when an asynchronous retrieval ('get') completes.

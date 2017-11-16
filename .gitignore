@@ -1,0 +1,12 @@
+conda-bld-tst
+setup-py-tst
+build
+
+*.cache
+*.pyc
+__pycache__
+
+*.swp
+*~
+
+logs

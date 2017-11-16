@@ -1,23 +1,32 @@
+{% set VERSION = '2.3.2' %}
+{% set EPICS = '3.14.12.6' %}
+
 package:
   name: pyca
-  version: "2.3.1"
+  version: {{ VERSION }}
 
 source:
   path: ..
 
 build:
   number: 1
+  string: py{{ py }}np{{ np }}epics{{ EPICS }}
 
 requirements:
   build:
-    - python {{PY_VER}}*,<3
-    - epics-base
-    - numpy
+    - python {{ PY_VER }}*,<3
+    - setuptools
+    - epics-base {{ EPICS }}*
+    - numpy {{ NPY_VER }}*
 
   run:
-    - python {{PY_VER}}*,<3
-    - epics-base
-    - numpy
+    - python {{ PY_VER }}*,<3
+    - epics-base {{ EPICS }}*
+    - numpy {{ NPY_VER }}*
+
+tests:
+  import:
+    pyca
 
 about:
   home: https://github.com/slaclab/pyca
