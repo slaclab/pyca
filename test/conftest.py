@@ -13,7 +13,7 @@ pvdb = dict(
     DOUBLE = dict(type="float"),
     STRING = dict(type="string"),
     ENUM = dict(type="enum", enums=["zero", "one", "two", "three"]),
-    WAVE = dict(type="char", count=10)
+    WAVE = dict(type="int", count=10)
 )
 test_pvs = [pvbase + ":" + key for key in pvdb.keys()]
 
