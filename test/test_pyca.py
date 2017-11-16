@@ -4,7 +4,7 @@ import logging
 import pytest
 import numpy as np
 import pyca
-from conftest import test_pvs, ConnectCallback, GetCallback, setup_pv, pvbase
+from conftest import test_pvs, setup_pv, pvbase
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ def test_create_and_clear_channel(pvname):
     pv.clear_channel()
     time.sleep(1)
     with pytest.raises(pyca.pyexc):
-        pv.get_data()
+        pv.get_data(False, -1.0)
 
 
 @pytest.mark.timeout(10)
@@ -32,12 +32,14 @@ def test_get_data(pvname):
     logger.debug('test_get_data %s', pvname)
     pv = setup_pv(pvname)
     # get time vars
-    pv.get_data(False, 0.0)
+    pv.get_data(False, -1.0)
+    pyca.flush_io()
     assert pv.getevt_cb.wait(timeout=1)
-    assert pv.getevt_cb.reset()
+    pv.getevt_cb.reset()
     if not isinstance(pv.data['value'], str):
         # get ctrl vars
-        pv.get_data(True, 0.0)
+        pv.get_data(True, -1.0)
+        pyca.flush_io()
         assert pv.getevt_cb.wait(timeout=1)
     # check that the data has all the keys
     all_keys = ('status', 'value', 'secs', 'nsec')
@@ -52,21 +54,23 @@ def test_get_data(pvname):
 def test_put_get(pvname):
     logger.debug('test_put_get %s', pvname)
     pv = setup_pv(pvname)
-    pv.get_data(False, 0.0)
+    pv.get_data(False, -1.0)
+    pyca.flush_io()
     assert pv.getevt_cb.wait(timeout=1)
     old_value = pv.data['value']
     pv_type = type(old_value)
+    logger.debug('%s is of type %s', pvname, pv_type)
     if pv_type in (int, long, float):
         new_value = old_value + 1
     elif pv_type == str:
         new_value = "putget"
     elif pv_type == tuple:
         new_value = tuple([1] * len(old_value))
+    logger.debug('caput %s %s', pvname, new_value)
+    pv.put_data(new_value, 1.0)
     pv.getevt_cb.reset()
-    pv.put_data(new_value, 0.0)
-    assert pv.getevt_cb.wait(timeout=1)
-    pv.getevt_cb.reset()
-    pv.get_data(False, 0.0)
+    pv.get_data(False, -1.0)
+    pyca.flush_io()
     assert pv.getevt_cb.wait(timeout=1)
     recv_value = pv.data['value']
     assert recv_value == new_value
@@ -84,23 +88,23 @@ def test_subscribe(pvname):
     pv.monitor_cb = mon_cb
     pv.subscribe_channel(pyca.DBE_VALUE | pyca.DBE_LOG | pyca.DBE_ALARM, False)
     # Repeat the put/get test without the get
-    pv.get_data(False, 0.0)
+    pv.get_data(False, -1.0)
+    pyca.flush_io()
     assert pv.getevt_cb.wait(timeout=1)
     old_value = pv.data['value']
     pv_type = type(old_value)
+    logger.debug('%s is of type %s', pvname, pv_type)
     if pv_type in (int, long, float):
         new_value = old_value + 1
     elif pv_type == str:
         new_value = "putget"
     elif pv_type == tuple:
         new_value = tuple([1] * len(old_value))
-    pv.getevt_cb.reset()
-    pv.put_data(new_value, 0.0)
-    assert pv.getevt_cb.wait(timeout=1)
+    logger.debug('caput %s %s', pvname, new_value)
+    pv.put_data(new_value, 1.0)
+    assert ev.wait(timeout=1)
     recv_value = pv.data['value']
     assert recv_value == new_value
-    # Verify that monitor_cb was called
-    assert ev.is_set()
 
 
 @pytest.mark.timeout(10)
@@ -121,7 +125,8 @@ def test_waveform():
     pv = setup_pv(pvbase + ":WAVE")
     # Do as a tuple
     pv.use_numpy = False
-    pv.get_data(False, 0.0)
+    pv.get_data(False, -1.0)
+    pyca.flush_io()
     assert pv.getevt_cb.wait(timeout=1)
     val = pv.data['value']
     assert isinstance(val, tuple)
@@ -129,7 +134,8 @@ def test_waveform():
     pv.getevt_cb.reset()
     # Do as a np.ndarray
     pv.use_numpy = True
-    pv.get_data(False, 0.0)
+    pv.get_data(False, -1.0)
+    pyca.flush_io()
     assert pv.getevt_cb.wait(timeout=1)
     val = pv.data['value']
     assert isinstance(val, np.ndarray)
@@ -142,7 +148,8 @@ def test_threads():
     def some_thread_thing(pvname):
         pyca.attach_context()
         pv = setup_pv(pvname)
-        pv.get_data(False, 0.0)
+        pv.get_data(False, -1.0)
+        pyca.flush_io()
         assert pv.getevt_cb.wait(timeout=1)
 
     pvname = pvbase + ":WAVE"
