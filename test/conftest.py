@@ -1,9 +1,11 @@
 import threading
+import logging
 import pyca
 from pcaspy import Driver, SimpleServer
 from pcaspy.tools import ServerThread
 import pytest
 
+logger = logging.getLogger(__name__)
 
 pvbase = "PYCA:TEST"
 pvdb = dict(
@@ -36,6 +38,7 @@ class TestServer(object):
         """
         Create a new server and start it
         """
+        logger.debug('Create new server')
         self.server = SimpleServer()
         self.server.createPV(self.pvbase + ":", self.pvdb)
         self.driver = TestDriver()
@@ -44,6 +47,7 @@ class TestServer(object):
         """
         Remove the existing server (if it exists) and re-initialize
         """
+        logger.debug('Kill server')
         self.stop_server()
         self.server = None
         self.driver = None
@@ -52,16 +56,19 @@ class TestServer(object):
         """
         Allow the current server to begin processing
         """
+        logger.debug('Restarting pcaspy server')
         if self.server is None:
             self.make_server()
         self.stop_server()
         self.server_thread = ServerThread(self.server)
+        logger.debug('Pressing start')
         self.server_thread.start()
 
     def stop_server(self):
         """
         Pause server processing
         """
+        logger.debug('Stop old server, if exists')
         try:
             self.server_thread.stop()
         except:
@@ -76,19 +83,34 @@ def server():
 
 
 class ConnectCallback(object):
-    def __init__(self):
+    def __init__(self, name):
+        self.name = name
         self.connected = False
         self.cev = threading.Event()
         self.dcev = threading.Event()
         self.lock = threading.RLock()
 
     def wait(self, timeout=None):
-        self.cev.wait(timeout=timeout)
+        logger.debug('Wait on connect callback %s', self.name)
+        ok = self.cev.wait(timeout=timeout)
+        if ok:
+            logger.debug('Wait complete on connect %s', self.name)
+        else:
+            logger.debug('Wait fail on connect %s', self.name)
+        return ok
 
     def wait_dc(self, timeout=None):
-        self.dcev.wait(timeout=timeout)
+        logger.debug('Wait on disconnect callback %s', self.name)
+        ok = self.dcev.wait(timeout=timeout)
+        if ok:
+            logger.debug('Wait complete on disconnect %s', self.name)
+        else:
+            logger.debug('Wait fail on disconnect %s', self.name)
+        return ok
 
     def __call__(self, is_connected):
+        logger.debug('Connect callback in %s, is_connected=%s',
+                     self.name, is_connected)
         with self.lock:
             self.connected = is_connected
             if self.connected:
@@ -100,24 +122,34 @@ class ConnectCallback(object):
 
 
 class GetCallback(object):
-    def __init__(self):
+    def __init__(self, name):
+        self.name = name
         self.gev = threading.Event()
 
     def wait(self, timeout=None):
-        self.gev.wait(timeout=timeout)
+        logger.debug('Wait on get callback %s', self.name)
+        ok = self.gev.wait(timeout=timeout)
+        if ok:
+            logger.debug('Wait complete on get %s', self.name)
+        else:
+            logger.debug('Wait fail on get %s', self.name)
+        return ok
 
     def reset(self):
+        logger.debug('Clear get callback %s', self.name)
         self.gev.clear()
 
     def __call__(self, exception=None):
+        logger.debug('Get callback in %s, exception=%s',
+                     self.name, exception)
         if exception is None:
             self.gev.set()
 
 
 def setup_pv(pvname, connect=True):
     pv = pyca.capv(pvname)
-    pv.connect_cb = ConnectCallback()
-    pv.getevt_cb = GetCallback()
+    pv.connect_cb = ConnectCallback(pvname)
+    pv.getevt_cb = GetCallback(pvname)
     if connect:
         pv.create_channel()
         pv.connect_cb.wait(timeout=1)
