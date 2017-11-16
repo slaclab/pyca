@@ -114,7 +114,7 @@ def test_misc(pvname):
     pv = setup_pv(pvname)
     assert isinstance(pv.host(), str)
     assert isinstance(pv.state(), int)
-    assert pv.count() == 1
+    assert isinstance(pv.count(), int)
     assert isinstance(pv.type(), str)
     assert isinstance(pv.rwaccess(), int)
 
@@ -151,9 +151,9 @@ def test_threads():
         pv.get_data(False, -1.0)
         pyca.flush_io()
         assert pv.getevt_cb.wait(timeout=1)
+        assert isinstance(pv.data['value'], tuple)
 
     pvname = pvbase + ":WAVE"
     thread = threading.Thread(target=some_thread_thing, args=(pvname,))
     thread.start()
     thread.join()
-    assert isinstance(pv.data['value'], tuple)
