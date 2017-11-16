@@ -83,6 +83,8 @@ def test_subscribe(pvname):
     pv = setup_pv(pvname)
     ev = threading.Event()
     def mon_cb(exception=None):
+        logger.debug('monitor_cb in %s, exception=%s',
+                     pvname, exception)
         if exception is not None:
             ev.set()
     pv.monitor_cb = mon_cb
