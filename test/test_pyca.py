@@ -103,6 +103,7 @@ def test_subscribe(pvname):
     elif pv_type == tuple:
         new_value = tuple([1] * len(old_value))
     logger.debug('caput %s %s', pvname, new_value)
+    ev.clear()
     pv.put_data(new_value, 1.0)
     assert ev.wait(timeout=1)
     recv_value = pv.data['value']
