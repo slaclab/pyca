@@ -85,7 +85,7 @@ def test_subscribe(pvname):
     def mon_cb(exception=None):
         logger.debug('monitor_cb in %s, exception=%s',
                      pvname, exception)
-        if exception is not None:
+        if exception is None:
             ev.set()
     pv.monitor_cb = mon_cb
     pv.subscribe_channel(pyca.DBE_VALUE | pyca.DBE_LOG | pyca.DBE_ALARM, False)
