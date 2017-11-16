@@ -99,7 +99,7 @@ def test_subscribe(pvname):
     if pv_type in (int, long, float):
         new_value = old_value + 1
     elif pv_type == str:
-        new_value = "putget"
+        new_value = "putmon"
     elif pv_type == tuple:
         new_value = tuple([1] * len(old_value))
     logger.debug('caput %s %s', pvname, new_value)
