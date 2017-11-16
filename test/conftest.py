@@ -9,7 +9,6 @@ logger = logging.getLogger(__name__)
 
 pvbase = "PYCA:TEST"
 pvdb = dict(
-    CHAR = dict(type="char"),
     LONG = dict(type="int"),
     DOUBLE = dict(type="float"),
     STRING = dict(type="string"),
