@@ -763,17 +763,10 @@ extern "C" {
         // secs between Jan 1st 1970 and Jan 1st 1990
         PyDict_SetItemString(d, "epoch", PyLong_FromLong(7305 * 86400));
 
-#if 1
-        a = PyCObject_FromVoidPtr((void *)pyca_getevent_handler, NULL);
+        a = PyCapsule_New((void *)pyca_getevent_handler, "pyca.get_handler", NULL);
         PyModule_AddObject(module, "get_handler", a);
-        a = PyCObject_FromVoidPtr((void *)pyca_monitor_handler, NULL);
+        a = PyCapsule_New((void *)pyca_monitor_handler, "pyca.monitor_handler", NULL);
         PyModule_AddObject(module, "monitor_handler", a);
-#else
-        a = PyCapsule_New(pyca_getevent_handler, "pyca.get_handler", NULL);
-        PyModule_AddObject(module, "get_handler", a);
-        a = PyCapsule_New(pyca_monitor_handler, "pyca.monitor_handler", NULL);
-        PyModule_AddObject(module, "monitor_handler", a);
-#endif
 
         // Add capv type to this module
         Py_INCREF(&capv_type);
