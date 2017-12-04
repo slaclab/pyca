@@ -11,6 +11,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include "p3compat.h"
 #include "pyca.hh"
 #include "getfunctions.hh"
 #include "putfunctions.hh"
@@ -711,18 +712,35 @@ extern "C" {
         "WRITE_ACCESS_ALARM",
     };
 
+#ifdef IS_PY3K
+    static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "pyca",
+        NULL,
+        -1,
+        pyca_methods,
+        NULL,
+        NULL,
+        NULL,
+        NULL
+    };
+#endif
 
     // Initialize python module
-    void initpyca()
+    DECLARE_INIT(pyca)
     {
         import_array();
         if (PyType_Ready(&capv_type) < 0) {
-            return;
+            INITERROR;
         }
 
+#ifdef IS_PY3K
+        PyObject* module = PyModule_Create(&moduledef);
+#else
         PyObject* module = Py_InitModule("pyca", pyca_methods);
-        if (!module) {
-            return;
+#endif
+        if (m == NULL) {
+            INITERROR;
         }
 
         // Export selected channel access constants
@@ -782,5 +800,8 @@ extern "C" {
                 // Py_AtExit(ca_context_destroy);
             }
         }
+#ifdef IS_PY3K
+        return module;
+#endif
     }
 }
