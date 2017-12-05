@@ -11,7 +11,7 @@
 #define PyString_FromString PyUnicode_FromString
 #define PyString_Check      PyUnicode_Check
 // This should suffice, as long as we don't call this twice and try to hold onto both!
-static const char *PyString_AsString(PyObject *o)
+static char *PyString_AsString(PyObject *o)
 {
     static char *result = NULL;
     if (result) {
