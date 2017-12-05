@@ -86,6 +86,7 @@ def test_subscribe(pvname):
     logger.debug('test_subscribe %s', pvname)
     pv = setup_pv(pvname)
     ev = threading.Event()
+
     def mon_cb(exception=None):
         logger.debug('monitor_cb in %s, exception=%s',
                      pvname, exception)
@@ -152,6 +153,7 @@ def test_waveform():
 @pytest.mark.timeout(10)
 def test_threads():
     logger.debug('test_threads')
+
     def some_thread_thing(pvname):
         pyca.attach_context()
         pv = setup_pv(pvname)
