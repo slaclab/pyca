@@ -73,12 +73,19 @@ class TestServer(object):
         except:
             pass
 
+
+has_server = False
+
+
 @pytest.fixture(scope='module')
 def server():
-    server = TestServer(pvbase, **pvdb)
-    server.start_server()
-    yield server
-    server.kill_server()
+    global has_server
+    if not has_server:
+        has_server = True
+        server = TestServer(pvbase, **pvdb)
+        server.start_server()
+        yield server
+        server.kill_server()
 
 
 class ConnectCallback(object):
