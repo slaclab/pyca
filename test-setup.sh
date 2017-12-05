@@ -1,3 +1,4 @@
+rm -rf build
 python setup.py build
 LIB=`find build -name pyca*.so`
 LINK='pyca.so'
