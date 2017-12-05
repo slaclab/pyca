@@ -7,17 +7,20 @@ import sys
 
 from options import Options
 
+
 def caput(pvname, value):
     pv = Pv(pvname)
     pv.connect(1.)
     pv.put(value, timeout=1.)
     pv.disconnect()
 
+
 if __name__ == '__main__':
-    options = Options(['pvname', 'value'], ['connect_timeout','put_timeout'], [])
+    options = Options(['pvname', 'value'], ['connect_timeout', 'put_timeout'],
+                      [])
     try:
         options.parse()
-    except Exception, msg:
+    except Exception as msg:
         options.usage(str(msg))
         sys.exit()
 
@@ -32,18 +35,18 @@ if __name__ == '__main__':
 
     try:
         value = int(options.value)
-    except:
+    except Exception:
         value = float(options.value)
 
     try:
         pv = Pv(options.pvname)
         pv.connect(connect_timeout)
         pv.get(ctrl=False, timeout=put_timeout)
-        print('Old: %-30s' %(pv.name), pv.value)
+        print('Old: %-30s' % (pv.name), pv.value)
         pv.put(value, put_timeout)
         pv.get(ctrl=False, timeout=put_timeout)
-        print('New: %-30s' %(pv.name), pv.value)
-    except pyca.pyexc, e:
-        print('pyca exception: %s' %(e))
-    except pyca.caexc, e:
-        print('channel access exception: %s' %(e))
+        print('New: %-30s' % (pv.name), pv.value)
+    except pyca.pyexc as e:
+        print('pyca exception: %s' % (e))
+    except pyca.caexc as e:
+        print('channel access exception: %s' % (e))

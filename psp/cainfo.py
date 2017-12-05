@@ -11,7 +11,7 @@ if __name__ == '__main__':
     options = Options(['pvnames'], ['timeout'], [])
     try:
         options.parse()
-    except Exception, msg:
+    except Exception as msg:
         options.usage(str(msg))
         sys.exit()
 
@@ -35,7 +35,7 @@ if __name__ == '__main__':
             print('  Access:', access[pv.rwaccess()])
             print('  Type:  ', pv.type())
             print('  Count: ', pv.count())
-        except pyca.pyexc, e:
-            print('pyca exception: %s' %(e))
-        except pyca.caexc, e:
-            print('channel access exception: %s' %(e))
+        except pyca.pyexc as e:
+            print('pyca exception: %s' % (e))
+        except pyca.caexc as e:
+            print('channel access exception: %s' % (e))

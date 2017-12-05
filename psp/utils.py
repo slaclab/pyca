@@ -2,14 +2,17 @@ import pyca
 import datetime
 import threading
 
+
 def now():
-    """ 
+    """
     Return string with current date and time
     """
     now = datetime.datetime.now()
-    return "%04d-%02d-%02d %02d:%02d:%02d.%03d" % (now.year, now.month, now.day,
-                                                   now.hour, now.minute, now.second,
+    return "%04d-%02d-%02d %02d:%02d:%02d.%03d" % (now.year, now.month,
+                                                   now.day, now.hour,
+                                                   now.minute, now.second,
                                                    int(now.microsecond/1e3))
+
 
 def set_numpy(use_numpy):
     """
@@ -21,6 +24,7 @@ def set_numpy(use_numpy):
         True means numpy will be used
     """
     pyca.set_numpy(use_numpy)
+
 
 def ensure_context():
     """
@@ -37,6 +41,7 @@ def ensure_context():
     pyca.new_context()
     pyca.attach_context()
 
+
 def check_condition(fn, condition):
     """
     Check an arbitrary condition with against an arbitrary function
@@ -49,18 +54,19 @@ def check_condition(fn, condition):
             return ok
     return inner
 
+
 def any_condition(condition):
     """
     Check that any element in an array meets an arbitrary condition
     """
-    return check_condition(any,condition)
+    return check_condition(any, condition)
 
 
 def all_condition(condition):
     """
     Check that all elements in an array meets an arbitrary condition
     """
-    return check_condition(all,condition)
+    return check_condition(all, condition)
 
 
 class TimeoutSem(object):
@@ -70,7 +76,7 @@ class TimeoutSem(object):
 
     Usage:
     .. code::
-    with TimeoutSem(<Semaphore or Lock>, <timeout>): 
+    with TimeoutSem(<Semaphore or Lock>, <timeout>):
         <code block>
     """
     def __init__(self, sem, timeout=-1):
