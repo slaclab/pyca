@@ -10,6 +10,7 @@
 #define PyInt_FromLong      PyLong_FromLong
 #define PyString_FromString PyUnicode_FromString
 #define PyString_Check      PyUnicode_Check
+#define PyString_FromFormat PyUnicode_FromFormat
 // This should suffice, as long as we don't call this twice and try to hold onto both!
 static char *PyString_AsString(PyObject *o)
 {
