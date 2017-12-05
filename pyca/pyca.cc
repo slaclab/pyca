@@ -516,7 +516,9 @@ extern "C" {
 
     static PyTypeObject capv_type = {
         PyObject_HEAD_INIT(0)
+#ifndef IS_PY3K
         0,
+#endif
         "pyca.capv",
         sizeof(capv),
         0,
