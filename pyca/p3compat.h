@@ -1,6 +1,5 @@
 #ifndef PYCA_P3COMPAT
 #define PYCA_P3COMPAT
-#endif
 #if PY_MAJOR_VERSION >= 3
 #define IS_PY3K
 #define DECLARE_INIT(name)  PyMODINIT_FUNC PyInit_##name(void)
@@ -53,4 +52,5 @@ static int PyString_Size(PyObject *o)
 #define INITERROR           return
 #define Py_TYPE(o)          ((o)->ob_type)
 #define PyVarObject_HEAD_INIT(type, size)   PyObject_HEAD_INIT(type) size,
+#endif
 #endif
