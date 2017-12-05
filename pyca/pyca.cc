@@ -739,7 +739,7 @@ extern "C" {
 #else
         PyObject* module = Py_InitModule("pyca", pyca_methods);
 #endif
-        if (m == NULL) {
+        if (module == NULL) {
             INITERROR;
         }
 
