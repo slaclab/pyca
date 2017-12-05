@@ -1,3 +1,4 @@
+#include "p3compat.h"
 // Channel access GET template functions
 static inline PyObject* _pyca_get(const dbr_string_t value)
 {

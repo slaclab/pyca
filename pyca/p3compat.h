@@ -1,3 +1,6 @@
+#ifndef PYCA_P3COMPAT
+#define PYCA_P3COMPAT
+#endif
 #if PY_MAJOR_VERSION >= 3
 #define IS_PY3K
 #define DECLARE_INIT(name)  PyMODINIT_FUNC PyInit_##name(void)

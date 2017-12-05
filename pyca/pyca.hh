@@ -1,3 +1,4 @@
+#include "p3compat.h"
 // Structure to define a channel access PV for python
 struct capv {
   PyObject_HEAD
