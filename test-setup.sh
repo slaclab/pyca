@@ -1,5 +1,5 @@
 python setup.py build
-LIB=`find build -name pyca.so`
+LIB=`find build -name pyca*.so`
 LINK='pyca.so'
 if [ -L $LINK ]; then
   rm $LINK
