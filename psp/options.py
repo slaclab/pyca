@@ -25,7 +25,7 @@ class Options(object):
     if notes != '':
       msg += '\nnotes: '
       msg += notes
-    print msg
+    print(msg)
 
 
   def parse(self):

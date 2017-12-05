@@ -29,13 +29,13 @@ if __name__ == '__main__':
     try:
       pv = Pv(pvname)
       pv.connect(timeout)
-      print pv.name
-      print '  State: ', states[pv.state()]
-      print '  Host:  ', pv.host()
-      print '  Access:', access[pv.rwaccess()]
-      print '  Type:  ', pv.type()
-      print '  Count: ', pv.count()
+      print(pv.name)
+      print('  State: ', states[pv.state()])
+      print('  Host:  ', pv.host())
+      print('  Access:', access[pv.rwaccess()])
+      print('  Type:  ', pv.type())
+      print('  Count: ', pv.count())
     except pyca.pyexc, e:
-      print 'pyca exception: %s' %(e)
+      print('pyca exception: %s' %(e))
     except pyca.caexc, e:
-      print 'channel access exception: %s' %(e)
+      print('channel access exception: %s' %(e))

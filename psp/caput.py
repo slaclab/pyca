@@ -39,11 +39,11 @@ if __name__ == '__main__':
     pv = Pv(options.pvname)
     pv.connect(connect_timeout)
     pv.get(ctrl=False, timeout=put_timeout)
-    print 'Old: %-30s' %(pv.name), pv.value
+    print('Old: %-30s' %(pv.name), pv.value)
     pv.put(value, put_timeout)
     pv.get(ctrl=False, timeout=put_timeout)
-    print 'New: %-30s' %(pv.name), pv.value
+    print('New: %-30s' %(pv.name), pv.value)
   except pyca.pyexc, e:
-    print 'pyca exception: %s' %(e)
+    print('pyca exception: %s' %(e))
   except pyca.caexc, e:
-    print 'channel access exception: %s' %(e)
+    print('channel access exception: %s' %(e))

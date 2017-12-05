@@ -33,15 +33,15 @@ class monitor(Pv):
               value = ["0x%x" % v for v in value]
             except:
               value = "0x%x" % value  # must be a scalar!
-          print "%-30s %08x.%08x" %(self.name, self.secs, self.nsec), value
+          print("%-30s %08x.%08x" %(self.name, self.secs, self.nsec), value)
         else:
-          print "%-30s %s %s" %(self.name, 
+          print("%-30s %s %s" %(self.name, 
                                 pyca.severity[self.severity],
-                                pyca.alarm[self.status])
+                                pyca.alarm[self.status]))
       else:
-        print "%-30s " %(self.name), exception
+        print("%-30s " %(self.name), exception)
     except Exception, e:
-      print e
+      print(e)
 
 if __name__ == '__main__':
   options = Options(['pvnames'], ['timeout', 'maxlen'], ['hex'])
@@ -52,7 +52,7 @@ if __name__ == '__main__':
     sys.exit()
 
   hex = False if ( options.hex == None ) else True
-  print hex
+  print(hex)
   pvnames = options.pvnames.split()
   if options.timeout is not None:
     timeout = float(options.timeout)
@@ -67,9 +67,9 @@ if __name__ == '__main__':
       pv.connect(timeout)
       pv.monitor(evtmask, ctrl=False)
     except pyca.pyexc, e:
-      print 'pyca exception: %s' %(e)
+      print('pyca exception: %s' %(e))
     except pyca.caexc, e:
-      print 'channel access exception: %s' %(e)
+      print('channel access exception: %s' %(e))
 
   pyca.flush_io()
   try:
