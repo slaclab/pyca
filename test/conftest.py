@@ -9,11 +9,11 @@ logger = logging.getLogger(__name__)
 
 pvbase = "PYCA:TEST"
 pvdb = dict(
-    LONG = dict(type="int"),
-    DOUBLE = dict(type="float"),
-    STRING = dict(type="string"),
-    ENUM = dict(type="enum", enums=["zero", "one", "two", "three"]),
-    WAVE = dict(type="int", count=10)
+    LONG=dict(type="int"),
+    DOUBLE=dict(type="float"),
+    STRING=dict(type="string"),
+    ENUM=dict(type="enum", enums=["zero", "one", "two", "three"]),
+    WAVE=dict(type="int", count=10)
 )
 test_pvs = [pvbase + ":" + key for key in pvdb.keys()]
 
@@ -70,7 +70,7 @@ class TestServer(object):
         logger.debug('Stop old server, if exists')
         try:
             self.server_thread.stop()
-        except:
+        except Exception:
             pass
 
 
