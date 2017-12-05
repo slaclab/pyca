@@ -1,11 +1,9 @@
 #!/usr/bin/env python
-
-import pyca
-from Pv import Pv
-
 import sys
 
+import pyca
 from options import Options
+from Pv import Pv
 
 
 class monitor(Pv):

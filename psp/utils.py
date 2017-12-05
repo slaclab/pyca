@@ -1,6 +1,7 @@
-import pyca
 import datetime
 import threading
+
+import pyca
 
 
 def now():

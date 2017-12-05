@@ -1,12 +1,10 @@
 #!/usr/bin/env python
-
-import pyca
-from Pv import Pv
-
 import sys
 import time
 
+import pyca
 from options import Options
+from Pv import Pv
 
 
 def caget(pvname):

@@ -1,11 +1,9 @@
 #!/usr/bin/env python
-
-from Pv import Pv
-
-import pyca
 import sys
 
+import pyca
 from options import Options
+from Pv import Pv
 
 
 def caput(pvname, value):

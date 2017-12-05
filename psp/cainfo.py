@@ -1,11 +1,10 @@
 #!/usr/bin/env python
-
-import pyca
-from Pv import Pv
-
 import sys
 
+import pyca
 from options import Options
+from Pv import Pv
+
 
 if __name__ == '__main__':
     options = Options(['pvnames'], ['timeout'], [])
