@@ -45,7 +45,7 @@ static inline PyObject* _pyca_get(const dbr_double_t value)
 // if present, that method is invoked. This mechanism may avoid
 // unncessary data copies and it may be useful for large arrays.
 
-typedef void (*processptr)(const void* cadata, long count, size_t size, void* descr);
+typedef void (*processptr)(const void* cadata, long count, size_t size);
 
 // EPICS      Description                Numpy
 // DBR_STRING 40 character string`       NPY_STRING
@@ -117,9 +117,9 @@ PyObject* _pyca_get_value(capv* pv, const T* dbrv, long count)
         return pytup;
       }
     } else {
-      processptr process = (processptr)PyCObject_AsVoidPtr(pv->processor);
-      void* descr = PyCObject_GetDesc(pv->processor);
-      process(&(dbrv->value), count, sizeof(dbrv->value), descr);
+      const char* name = PyCapsule_GetName(pv->processor);
+      processptr process = (processptr)PyCapsule_GetPointer(pv->processor, name);
+      process(&(dbrv->value), count, sizeof(dbrv->value));
       return NULL;
     }
   }
