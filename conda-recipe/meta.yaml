@@ -1,4 +1,4 @@
-{% set VERSION = '2.3.2' %}
+{% set VERSION = '3.0.0' %}
 {% set EPICS = '3.14.12.6' %}
 
 package:
@@ -14,13 +14,13 @@ build:
 
 requirements:
   build:
-    - python {{ PY_VER }}*,<3
+    - python {{ PY_VER }}*
     - setuptools
     - epics-base {{ EPICS }}*
     - numpy {{ NPY_VER }}*
 
   run:
-    - python {{ PY_VER }}*,<3
+    - python {{ PY_VER }}*
     - epics-base {{ EPICS }}*
     - numpy {{ NPY_VER }}*
 

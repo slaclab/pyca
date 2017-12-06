@@ -1,3 +1,4 @@
+import sys
 import time
 import threading
 import logging
@@ -5,6 +6,9 @@ import pytest
 import numpy as np
 import pyca
 from conftest import test_pvs, setup_pv, pvbase
+
+if sys.version_info.major >= 3:
+    long = int
 
 logger = logging.getLogger(__name__)
 

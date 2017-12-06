@@ -1,3 +1,4 @@
+#include "p3compat.h"
 // Channel access GET template functions
 static inline PyObject* _pyca_get(const dbr_string_t value)
 {
@@ -117,8 +118,14 @@ PyObject* _pyca_get_value(capv* pv, const T* dbrv, long count)
         return pytup;
       }
     } else {
+#ifdef IS_PY3K
+      const char* name = PyCapsule_GetName(pv->processor);
+      processptr process = (processptr)PyCapsule_GetPointer(pv->processor, name);
+      void* descr = PyCapsule_GetContext(pv->processor);
+#else
       processptr process = (processptr)PyCObject_AsVoidPtr(pv->processor);
       void* descr = PyCObject_GetDesc(pv->processor);
+#endif
       process(&(dbrv->value), count, sizeof(dbrv->value), descr);
       return NULL;
     }

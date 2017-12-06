@@ -1,3 +1,4 @@
+#include "p3compat.h"
 // Channel access PUT template functions
 static inline void _pyca_put(PyObject* pyvalue, dbr_string_t* buf)
 {

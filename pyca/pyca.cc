@@ -11,6 +11,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include "p3compat.h"
 #include "pyca.hh"
 #include "getfunctions.hh"
 #include "putfunctions.hh"
@@ -515,7 +516,9 @@ extern "C" {
 
     static PyTypeObject capv_type = {
         PyObject_HEAD_INIT(0)
+#ifndef IS_PY3K
         0,
+#endif
         "pyca.capv",
         sizeof(capv),
         0,
@@ -711,18 +714,35 @@ extern "C" {
         "WRITE_ACCESS_ALARM",
     };
 
+#ifdef IS_PY3K
+    static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "pyca",
+        NULL,
+        -1,
+        pyca_methods,
+        NULL,
+        NULL,
+        NULL,
+        NULL
+    };
+#endif
 
     // Initialize python module
-    void initpyca()
+    DECLARE_INIT(pyca)
     {
         import_array();
         if (PyType_Ready(&capv_type) < 0) {
-            return;
+            INITERROR;
         }
 
+#ifdef IS_PY3K
+        PyObject* module = PyModule_Create(&moduledef);
+#else
         PyObject* module = Py_InitModule("pyca", pyca_methods);
-        if (!module) {
-            return;
+#endif
+        if (module == NULL) {
+            INITERROR;
         }
 
         // Export selected channel access constants
@@ -745,18 +765,17 @@ extern "C" {
         // secs between Jan 1st 1970 and Jan 1st 1990
         PyDict_SetItemString(d, "epoch", PyLong_FromLong(7305 * 86400));
 
-#if 1
+#ifdef IS_PY3K
+        a = PyCapsule_New((void *)pyca_getevent_handler, "pyca.get_handler", NULL);
+        PyModule_AddObject(module, "get_handler", a);
+        a = PyCapsule_New((void *)pyca_monitor_handler, "pyca.monitor_handler", NULL);
+        PyModule_AddObject(module, "monitor_handler", a);
+#else
         a = PyCObject_FromVoidPtr((void *)pyca_getevent_handler, NULL);
         PyModule_AddObject(module, "get_handler", a);
         a = PyCObject_FromVoidPtr((void *)pyca_monitor_handler, NULL);
         PyModule_AddObject(module, "monitor_handler", a);
-#else
-        a = PyCapsule_New(pyca_getevent_handler, "pyca.get_handler", NULL);
-        PyModule_AddObject(module, "get_handler", a);
-        a = PyCapsule_New(pyca_monitor_handler, "pyca.monitor_handler", NULL);
-        PyModule_AddObject(module, "monitor_handler", a);
 #endif
-
         // Add capv type to this module
         Py_INCREF(&capv_type);
         PyModule_AddObject(module, "capv", (PyObject*)&capv_type);
@@ -782,5 +801,8 @@ extern "C" {
                 // Py_AtExit(ca_context_destroy);
             }
         }
+#ifdef IS_PY3K
+        return module;
+#endif
     }
 }

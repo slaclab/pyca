@@ -1,3 +1,4 @@
+#include "p3compat.h"
 // Utility function to pack eventual arguments for callback
 PyObject* pyca_new_cbtuple(PyObject* arg)
 {
