@@ -58,8 +58,7 @@ def test_put_get(pvname):
         new_value = tuple([1] * len(old_value))
     logger.debug('caput %s %s', pvname, new_value)
     pv.put(new_value, timeout=1.0)
-    new_value = pv.get()
-    assert old_value == new_value
+    assert pv.get() == new_value
 
 
 @pytest.mark.timeout(10)
