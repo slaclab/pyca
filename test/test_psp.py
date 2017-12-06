@@ -14,7 +14,11 @@ logger = logging.getLogger(__name__)
 
 
 def setup_pv(pvname, connect=True):
-    return psp.PV(pvname, do_initialize=connect)
+    pv = psp.PV(pvname)
+    if connect:
+        pv.connect()
+        pv.wait_ready()
+    return pv
 
 
 def test_server_start(server):
