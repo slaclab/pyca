@@ -93,7 +93,7 @@ def test_misc(pvname):
     pv = setup_pv(pvname)
     assert isinstance(pv.host(), str)
     assert isinstance(pv.state(), int)
-    assert isinstance(pv.count(), int)
+    assert isinstance(pv.count, int)
     assert isinstance(pv.type(), str)
     assert isinstance(pv.rwaccess(), int)
 
@@ -106,12 +106,12 @@ def test_waveform():
     pv.use_numpy = False
     val = pv.get()
     assert isinstance(val, tuple)
-    assert len(val) == pv.count()
+    assert len(val) == pv.count
     # Do as a np.ndarray
     pv.use_numpy = True
     val = pv.get()
     assert isinstance(val, np.ndarray)
-    assert len(val) == pv.count()
+    assert len(val) == pv.count
 
 
 @pytest.mark.timeout(10)
