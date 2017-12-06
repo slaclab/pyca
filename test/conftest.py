@@ -75,7 +75,7 @@ class TestServer(object):
 has_server = False
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='session')
 def server():
     global has_server
     if not has_server:
