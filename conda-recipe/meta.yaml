@@ -26,7 +26,8 @@ requirements:
 
 tests:
   import:
-    pyca
+    - pyca
+    - psp
 
 about:
   home: https://github.com/slaclab/pyca
