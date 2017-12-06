@@ -24,8 +24,8 @@ requirements:
     - epics-base {{ EPICS }}*
     - numpy {{ NPY_VER }}*
 
-tests:
-  import:
+test:
+  imports:
     - pyca
     - psp
 
