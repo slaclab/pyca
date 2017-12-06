@@ -1,3 +1,3 @@
 __all__ = ['Pv','options']
 
-from Pv import Pv as PV
+from psp.Pv import Pv as PV
