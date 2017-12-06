@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 def setup_pv(pvname, connect=True):
     pv = psp.PV(pvname)
     if connect:
-        pv.connect(timeout=1)
+        pv.connect(timeout=1.0)
     return pv
 
 
@@ -57,7 +57,7 @@ def test_put_get(pvname):
     elif pv_type == tuple:
         new_value = tuple([1] * len(old_value))
     logger.debug('caput %s %s', pvname, new_value)
-    pv.put(new_value)
+    pv.put(new_value, timeout=1.0)
     new_value = pv.get()
     assert old_value == new_value
 
