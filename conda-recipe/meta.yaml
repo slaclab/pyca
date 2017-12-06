@@ -24,9 +24,10 @@ requirements:
     - epics-base {{ EPICS }}*
     - numpy {{ NPY_VER }}*
 
-tests:
-  import:
-    pyca
+test:
+  imports:
+    - pyca
+    - psp
 
 about:
   home: https://github.com/slaclab/pyca
