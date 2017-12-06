@@ -16,8 +16,7 @@ logger = logging.getLogger(__name__)
 def setup_pv(pvname, connect=True):
     pv = psp.PV(pvname)
     if connect:
-        pv.connect()
-        pv.wait_ready()
+        pv.connect(timeout=1)
     return pv
 
 
