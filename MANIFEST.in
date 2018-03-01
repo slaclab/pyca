@@ -1,1 +1,3 @@
 include pyca/*.hh
+include versioneer.py
+include psp/_version.py
