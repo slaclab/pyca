@@ -1,4 +1,5 @@
 from setuptools import setup, Extension
+import versioneer
 import os, sys
 import numpy as np
 
@@ -27,8 +28,11 @@ pyca = Extension('pyca',
                  runtime_library_dirs=[epics_lib,numpy_lib],
                  libraries=['Com', 'ca'])
 
+
+
 setup(name='pyca',
-      version='3.0.0',
+      version=versioneer.get_version(),
+      cmdclass=versioneer.get_cmdclass(),
       description='python channel access library',
       packages=['psp'],
       ext_modules=[pyca],
