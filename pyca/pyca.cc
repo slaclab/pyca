@@ -446,7 +446,14 @@ extern "C" {
         capv* pv = reinterpret_cast<capv*>(self);
         Py_XDECREF(pv->data);
         Py_XDECREF(pv->name);
+        Py_XDECREF(pv->processor);
+        Py_XDECREF(pv->connect_cb);
+        Py_XDECREF(pv->monitor_cb);
+        Py_XDECREF(pv->rwaccess_cb);
+        Py_XDECREF(pv->getevt_cb);
+        Py_XDECREF(pv->putevt_cb);
         Py_XDECREF(pv->simulated);
+        Py_XDECREF(pv->use_numpy);
         if (pv->cid) {
             ca_clear_channel(pv->cid);
             pv->cid = 0;
