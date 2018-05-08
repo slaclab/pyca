@@ -37,7 +37,7 @@ extern "C" {
         if (result != ECA_NORMAL) {
             pyca_raise_caexc_pv("ca_create_channel", result, pv);
         }
-        return ok();
+        Py_RETURN_NONE;
     }
 
     static PyObject* clear_channel(PyObject* self, PyObject* args)
@@ -53,7 +53,7 @@ extern "C" {
             pyca_raise_caexc_pv("ca_clear_channel", result, pv);
         }
         pv->cid = 0;
-        return ok();
+        Py_RETURN_NONE;
     }
 
     static PyObject* subscribe_channel(PyObject* self, PyObject* args)
@@ -79,7 +79,7 @@ extern "C" {
             else
                 pv->count = 0;
             pv->didmon = 1;
-            return ok();
+            Py_RETURN_NONE;
         }
 
         chid cid = pv->cid;
@@ -113,7 +113,7 @@ extern "C" {
         if (result != ECA_NORMAL) {
             pyca_raise_caexc_pv("ca_create_subscription", result, pv);
         }
-        return ok();
+        Py_RETURN_NONE;
     }
 
     static PyObject* unsubscribe_channel(PyObject* self, PyObject* args)
@@ -122,7 +122,7 @@ extern "C" {
 
         if (pv->simulated != Py_None) {
             pv->didmon = 0;
-            return ok();
+            Py_RETURN_NONE;
         }
 
         evid eid = pv->eid;
@@ -133,7 +133,7 @@ extern "C" {
             }
             pv->eid = 0;
         }
-        return ok();
+        Py_RETURN_NONE;
     }
 
     static PyObject* replace_access_rights_event(PyObject* self, PyObject* args)
@@ -144,7 +144,7 @@ extern "C" {
         if (result != ECA_NORMAL) {
             pyca_raise_caexc_pv("replace_access_rights_event", result, pv);
         }
-        return ok();
+        Py_RETURN_NONE;
     }
 
     static PyObject* get_enum_strings(PyObject* self, PyObject* args)
@@ -199,7 +199,7 @@ extern "C" {
             pyca_raise_pyexc_pv("get_enum_strings", "un-handled type", pv);
           }
         }
-        return ok();
+        Py_RETURN_NONE;
     }
 
     static PyObject* get_data(PyObject* self, PyObject* args)
@@ -229,7 +229,7 @@ extern "C" {
                 pyca_raise_pyexc_pv("get_data", "Can't specify a  get timeout on simulated PV", pv);
             }
             pv->didget = 1;
-            return ok();
+            Py_RETURN_NONE;
         }
         
         chid cid = pv->cid;
@@ -283,7 +283,7 @@ extern "C" {
                 pyca_raise_pyexc_pv("get_data", "un-handled type", pv);
             }
         }
-        return ok();
+        Py_RETURN_NONE;
     }
 
     static PyObject* put_data(PyObject* self, PyObject* args)
@@ -343,7 +343,7 @@ extern "C" {
                 pyca_raise_caexc_pv("ca_pend_io", result, pv);
             }
         }
-        return ok();
+        Py_RETURN_NONE;
     }
 
     static PyObject* host(PyObject* self, PyObject* args)
@@ -404,7 +404,7 @@ extern "C" {
             pyca_raise_pyexc_pv("set_string_enum", "error parsing arguments", pv);
         }
         pv->string_enum = (Py_True == pyval);
-        return ok();
+        Py_RETURN_NONE;
     }
 
     static bool numpy_arrays = false;
@@ -566,13 +566,13 @@ extern "C" {
         //       pyca_raise_caexc("ca_context_create", result);
         //     }
         printf("warning: no need to invoke initialize with this version of pyca\n");
-        return ok();
+        Py_RETURN_NONE;
     }
 
     static PyObject* finalize(PyObject*, PyObject*) {
         //     ca_context_destroy();
         printf("warning: no need to invoke finalize with this version of pyca\n");
-        return ok();
+        Py_RETURN_NONE;
     }
 
     // Each process needs a unique context.
@@ -603,7 +603,7 @@ extern "C" {
                 pyca_raise_pyexc("attach_context", "attach error");
             }
         }
-        return ok();
+        Py_RETURN_NONE;
     }
  
     static PyObject* new_context(PyObject*, PyObject*) {
@@ -617,7 +617,7 @@ extern "C" {
             }
             save_proc_context();
         }
-        return ok();
+        Py_RETURN_NONE;
     }
 
     static PyObject* pend_io(PyObject*, PyObject* args) {
@@ -634,7 +634,7 @@ extern "C" {
         if (result != ECA_NORMAL) {
             pyca_raise_caexc("ca_pend_io", result);
         }
-        return ok();
+        Py_RETURN_NONE;
     }
 
     static PyObject* flush_io(PyObject*, PyObject*) {
@@ -642,7 +642,7 @@ extern "C" {
         if (result != ECA_NORMAL) {
             pyca_raise_caexc("ca_flush_io", result);
         }
-        return ok();
+        Py_RETURN_NONE;
     }
 
     static PyObject* pend_event(PyObject*, PyObject* args) {
@@ -659,7 +659,7 @@ extern "C" {
         if (result != ECA_TIMEOUT) {
             pyca_raise_caexc("ca_pend_event", result);
         }
-        return ok();
+        Py_RETURN_NONE;
     }    
 
     static PyObject* set_numpy(PyObject*, PyObject* args) {
@@ -669,7 +669,7 @@ extern "C" {
             pyca_raise_pyexc("use_numpy", "error parsing arguments");
         }
         numpy_arrays = PyObject_IsTrue(np);
-        return ok();
+        Py_RETURN_NONE;
     }
 
     // Register module methods
