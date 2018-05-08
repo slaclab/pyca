@@ -746,24 +746,23 @@ extern "C" {
         }
 
         // Export selected channel access constants
-        PyObject* d = PyModule_GetDict(module);
-        PyDict_SetItemString(d, "DBE_VALUE", PyLong_FromLong(DBE_VALUE));
-        PyDict_SetItemString(d, "DBE_LOG",   PyLong_FromLong(DBE_LOG));
-        PyDict_SetItemString(d, "DBE_ALARM", PyLong_FromLong(DBE_ALARM));
+        PyModule_AddIntConstant(module, "DBE_VALUE", DBE_VALUE);
+        PyModule_AddIntConstant(module, "DBE_LOG", DBE_LOG);
+        PyModule_AddIntConstant(module, "DBE_ALARM", DBE_ALARM);
         PyObject* s = PyTuple_New(ALARM_NSEV);
         for (unsigned i=0; i<ALARM_NSEV; i++) {
-            PyDict_SetItemString(d, AlarmSeverityStrings[i], PyLong_FromLong(i));
-            PyTuple_SET_ITEM(s,i,PyString_FromString(AlarmSeverityStrings[i]));
+            PyModule_AddIntConstant(module, AlarmSeverityStrings[i], i);
+            PyTuple_SET_ITEM(s, i, PyString_FromString(AlarmSeverityStrings[i]));
         }
-        PyDict_SetItemString(d, "severity", s);
+        PyModule_AddObject(module, "severity", s);
         PyObject* a = PyTuple_New(ALARM_NSTATUS);
         for (unsigned i=0; i<ALARM_NSTATUS; i++) {
-            PyDict_SetItemString(d, AlarmConditionStrings[i], PyLong_FromLong(i));
-            PyTuple_SET_ITEM(a,i,PyString_FromString(AlarmConditionStrings[i]));
+            PyModule_AddIntConstant(module, AlarmConditionStrings[i], i);
+            PyTuple_SET_ITEM(a, i, PyString_FromString(AlarmConditionStrings[i]));
         }
-        PyDict_SetItemString(d, "alarm", a);
+        PyModule_AddObject(module, "alarm", a);
         // secs between Jan 1st 1970 and Jan 1st 1990
-        PyDict_SetItemString(d, "epoch", PyLong_FromLong(7305 * 86400));
+        PyModule_AddIntConstant(module, "epoch", 7305 * 86400);
 
 #ifdef IS_PY3K
         a = PyCapsule_New((void *)pyca_getevent_handler, "pyca.get_handler", NULL);
