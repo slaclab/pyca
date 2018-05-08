@@ -64,7 +64,7 @@ extern "C" {
         PyObject* pycnt = NULL;
 
         if (!PyArg_ParseTuple(args, "OO|O:subscribe", &pymsk, &pyctrl, &pycnt) ||
-            !PyLong_Check(pymsk) ||
+            !PyInt_Check(pymsk) ||
             !PyBool_Check(pyctrl) ||
             (pycnt && pycnt != Py_None && !PyInt_Check(pycnt))) {
             pyca_raise_pyexc_pv("subscribe_channel", "error parsing arguments", pv);
