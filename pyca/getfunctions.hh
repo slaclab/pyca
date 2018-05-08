@@ -132,6 +132,16 @@ PyObject* _pyca_get_value(capv* pv, const T* dbrv, long count)
   }
 }
 
+// Copy channel access status objects into python
+template<class T> static inline
+void _pyca_get_sts(capv* pv, const T* dbrv, long count)
+{
+  PyObject* pydata = pv->data;
+  _pyca_setitem(pydata, "status",      _pyca_get(dbrv->status));
+  _pyca_setitem(pydata, "severity",    _pyca_get(dbrv->severity));
+  _pyca_setitem(pydata, "value",       _pyca_get_value(pv, dbrv, count));
+}
+
 // Copy channel access time objects into python
 template<class T> static inline 
 void _pyca_get_time(capv* pv, const T* dbrv, long count)
@@ -237,6 +247,9 @@ static const void* _pyca_event_process(capv* pv,
   case DBR_TIME_DOUBLE:
     _pyca_get_time(pv, &dbr->tdblval, count);
     break;
+  case DBR_CTRL_STRING:
+    _pyca_get_sts(pv, &dbr->sstrval, count);
+    break;
   case DBR_CTRL_ENUM:
     _pyca_get_ctrl_enum(pv, &dbr->cenmval, count);
     break;
@@ -288,6 +301,9 @@ static void* _pyca_adjust_buffer_size(capv* pv,
     break;
   case DBR_TIME_DOUBLE:
     size = sizeof(dbr_time_double) + sizeof(dbr_double_t)*(count-1);    
+    break;
+  case DBR_CTRL_STRING:
+    size = sizeof(dbr_sts_string) + sizeof(dbr_string_t)*(count-1);
     break;
   case DBR_CTRL_ENUM:
     size = sizeof(dbr_ctrl_enum) + sizeof(dbr_enum_t)*(count-1);    

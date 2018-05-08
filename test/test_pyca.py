@@ -114,11 +114,10 @@ def test_get_data(pvname):
     pyca.flush_io()
     assert pv.getevt_cb.wait(timeout=1)
     pv.getevt_cb.reset()
-    if not isinstance(pv.data['value'], str):
-        # get ctrl vars
-        pv.get_data(True, -1.0)
-        pyca.flush_io()
-        assert pv.getevt_cb.wait(timeout=1)
+    # get ctrl vars
+    pv.get_data(True, -1.0)
+    pyca.flush_io()
+    assert pv.getevt_cb.wait(timeout=1)
     # check that the data has all the keys
     all_keys = ('status', 'value', 'secs', 'nsec')
     for key in all_keys:

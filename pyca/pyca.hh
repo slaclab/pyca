@@ -75,10 +75,3 @@ static inline int _pyca_setitem(PyObject* dict, const char* key, PyObject* val)
   }
   return 0;
 }
-
-static PyObject* ok()
-{
-  Py_INCREF(Py_None);
-  return Py_None;
-}
-
