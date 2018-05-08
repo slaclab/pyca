@@ -366,7 +366,7 @@ extern "C" {
     {
         capv* pv = reinterpret_cast<capv*>(self);
 
-        if (!pv->cid) pyca_raise_pyexc_pv("host", "channel is null", pv);
+        if (!pv->cid) pyca_raise_pyexc_pv("count", "channel is null", pv);
         return PyInt_FromLong(ca_element_count(pv->cid));
     }
 
@@ -374,7 +374,7 @@ extern "C" {
     {
         capv* pv = reinterpret_cast<capv*>(self);
 
-        if (!pv->cid) pyca_raise_pyexc_pv("host", "channel is null", pv);
+        if (!pv->cid) pyca_raise_pyexc_pv("type", "channel is null", pv);
         return PyString_FromString(dbf_type_to_text(ca_field_type(pv->cid)));
     }
 
@@ -382,7 +382,7 @@ extern "C" {
     {
         capv* pv = reinterpret_cast<capv*>(self);
 
-        if (!pv->cid) pyca_raise_pyexc_pv("host", "channel is null", pv);
+        if (!pv->cid) pyca_raise_pyexc_pv("rwaccess", "channel is null", pv);
         int rw = ca_read_access(pv->cid) ? 1 : 0;
         rw |= ca_write_access(pv->cid) ? 2 : 0;
         return PyInt_FromLong(rw);
