@@ -47,8 +47,9 @@ static void pyca_monitor_handler(struct event_handler_args args)
     PyObject* res = PyObject_Call(pv->monitor_cb, pytup, NULL);
     Py_XDECREF(res);
     Py_DECREF(pytup);
+  } else {
+    Py_XDECREF(pyexc);
   }
-  Py_XDECREF(pyexc);
   PyGILState_Release(gstate);
 }
 
@@ -89,8 +90,9 @@ static void pyca_getevent_handler(struct event_handler_args args)
     PyObject* res = PyObject_Call(pv->getevt_cb, pytup, NULL);
     Py_XDECREF(res);
     Py_DECREF(pytup);
+  } else {
+    Py_XDECREF(pyexc);
   }
-  Py_XDECREF(pyexc);
   PyGILState_Release(gstate);
 }
 
@@ -108,8 +110,9 @@ static void pyca_putevent_handler(struct event_handler_args args)
     PyObject* res = PyObject_Call(pv->putevt_cb, pytup, NULL);
     Py_XDECREF(res);
     Py_DECREF(pytup);
+  } else {
+    Py_XDECREF(pyexc);
   }
-  Py_XDECREF(pyexc);
   PyGILState_Release(gstate);
 }
 
