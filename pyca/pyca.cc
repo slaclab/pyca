@@ -21,7 +21,7 @@ extern "C" {
     //
     // Python methods for channel access PV types
     //
-    static PyObject* create_channel(PyObject* self, PyObject* args)
+    static PyObject* create_channel(PyObject* self, PyObject*)
     {
         capv* pv = reinterpret_cast<capv*>(self);
         if (pv->cid) {
@@ -40,7 +40,7 @@ extern "C" {
         Py_RETURN_NONE;
     }
 
-    static PyObject* clear_channel(PyObject* self, PyObject* args)
+    static PyObject* clear_channel(PyObject* self, PyObject*)
     {
         capv* pv = reinterpret_cast<capv*>(self);
 
@@ -116,7 +116,7 @@ extern "C" {
         Py_RETURN_NONE;
     }
 
-    static PyObject* unsubscribe_channel(PyObject* self, PyObject* args)
+    static PyObject* unsubscribe_channel(PyObject* self, PyObject*)
     {
         capv* pv = reinterpret_cast<capv*>(self);
 
@@ -136,7 +136,7 @@ extern "C" {
         Py_RETURN_NONE;
     }
 
-    static PyObject* replace_access_rights_event(PyObject* self, PyObject* args)
+    static PyObject* replace_access_rights_event(PyObject* self, PyObject*)
     {
         capv* pv = reinterpret_cast<capv*>(self);
         chid cid = pv->cid;
@@ -147,14 +147,11 @@ extern "C" {
         Py_RETURN_NONE;
     }
 
-    static PyObject* get_enum_strings(PyObject* self, PyObject* args)
+    static PyObject* get_enum_strings(PyObject* self, PyObject* pytmo)
     {
         capv* pv = reinterpret_cast<capv*>(self);
-        PyObject* pytmo;
 
-        if (!PyArg_ParseTuple(args, "O:get_enum_set", &pytmo) ||
-            !PyFloat_Check(pytmo)
-            ) 
+        if (!PyFloat_Check(pytmo)) 
         {
             pyca_raise_pyexc_pv("get_enum_strings", "error parsing arguments", pv);
         }
@@ -346,7 +343,7 @@ extern "C" {
         Py_RETURN_NONE;
     }
 
-    static PyObject* host(PyObject* self, PyObject* args)
+    static PyObject* host(PyObject* self, PyObject*)
     {
         capv* pv = reinterpret_cast<capv*>(self);
 
@@ -354,7 +351,7 @@ extern "C" {
         return PyString_FromString(ca_host_name(pv->cid));
     }
 
-    static PyObject* state(PyObject* self, PyObject* args)
+    static PyObject* state(PyObject* self, PyObject*)
     {
         capv* pv = reinterpret_cast<capv*>(self);
 
@@ -362,7 +359,7 @@ extern "C" {
         return PyInt_FromLong(ca_state(pv->cid));
     }
 
-    static PyObject* count(PyObject* self, PyObject* args)
+    static PyObject* count(PyObject* self, PyObject*)
     {
         capv* pv = reinterpret_cast<capv*>(self);
 
@@ -370,7 +367,7 @@ extern "C" {
         return PyInt_FromLong(ca_element_count(pv->cid));
     }
 
-    static PyObject* type(PyObject* self, PyObject* args)
+    static PyObject* type(PyObject* self, PyObject*)
     {
         capv* pv = reinterpret_cast<capv*>(self);
 
@@ -378,7 +375,7 @@ extern "C" {
         return PyString_FromString(dbf_type_to_text(ca_field_type(pv->cid)));
     }
 
-    static PyObject* rwaccess(PyObject* self, PyObject* args)
+    static PyObject* rwaccess(PyObject* self, PyObject*)
     {
         capv* pv = reinterpret_cast<capv*>(self);
 
@@ -388,19 +385,17 @@ extern "C" {
         return PyInt_FromLong(rw);
     }
 
-    static PyObject* is_string_enum(PyObject* self, PyObject* args)
+    static PyObject* is_string_enum(PyObject* self, PyObject*)
     {
         capv* pv = reinterpret_cast<capv*>(self);
         return PyBool_FromLong(pv->string_enum);
     }
 
-    static PyObject* set_string_enum(PyObject* self, PyObject* args)
+    static PyObject* set_string_enum(PyObject* self, PyObject* pyval)
     {
         capv* pv = reinterpret_cast<capv*>(self);
-        PyObject* pyval;
 
-        if (!PyArg_ParseTuple(args, "O:set_string_enum", &pyval) ||
-            !PyBool_Check(pyval)) {
+        if (!PyBool_Check(pyval)) {
             pyca_raise_pyexc_pv("set_string_enum", "error parsing arguments", pv);
         }
         pv->string_enum = (Py_True == pyval);
@@ -488,21 +483,21 @@ extern "C" {
 
     // Register capv methods
     static PyMethodDef capv_methods[] = {
-        {"create_channel", create_channel, METH_VARARGS},
-        {"clear_channel", clear_channel, METH_VARARGS},
+        {"create_channel", create_channel, METH_NOARGS},
+        {"clear_channel", clear_channel, METH_NOARGS},
         {"subscribe_channel", subscribe_channel, METH_VARARGS},
-        {"unsubscribe_channel", unsubscribe_channel, METH_VARARGS},
+        {"unsubscribe_channel", unsubscribe_channel, METH_NOARGS},
         {"get_data", get_data, METH_VARARGS},
         {"put_data", put_data, METH_VARARGS},
-        {"host", host, METH_VARARGS},
-        {"state", state, METH_VARARGS},
-        {"count", count, METH_VARARGS},
-        {"type", type, METH_VARARGS},
-        {"rwaccess", rwaccess, METH_VARARGS},
-        {"replace_access_rights_event", replace_access_rights_event, METH_VARARGS},
-        {"set_string_enum", set_string_enum, METH_VARARGS},
-        {"is_string_enum", is_string_enum, METH_VARARGS},
-        {"get_enum_strings", get_enum_strings, METH_VARARGS},
+        {"host", host, METH_NOARGS},
+        {"state", state, METH_NOARGS},
+        {"count", count, METH_NOARGS},
+        {"type", type, METH_NOARGS},
+        {"rwaccess", rwaccess, METH_NOARGS},
+        {"replace_access_rights_event", replace_access_rights_event, METH_NOARGS},
+        {"set_string_enum", set_string_enum, METH_O},
+        {"is_string_enum", is_string_enum, METH_NOARGS},
+        {"get_enum_strings", get_enum_strings, METH_O},
         {NULL,  NULL},
     };
 
@@ -627,11 +622,9 @@ extern "C" {
         Py_RETURN_NONE;
     }
 
-    static PyObject* pend_io(PyObject*, PyObject* args) {
-        PyObject* pytmo;
+    static PyObject* pend_io(PyObject*, PyObject* pytmo) {
         int result;
-        if (!PyArg_ParseTuple(args, "O:pend_io", &pytmo) ||
-            !PyFloat_Check(pytmo)) {
+        if (!PyFloat_Check(pytmo)) {
             pyca_raise_pyexc("pend_io", "error parsing arguments");
         }
         double timeout = PyFloat_AsDouble(pytmo);
@@ -652,11 +645,9 @@ extern "C" {
         Py_RETURN_NONE;
     }
 
-    static PyObject* pend_event(PyObject*, PyObject* args) {
-        PyObject* pytmo;
+    static PyObject* pend_event(PyObject*, PyObject* pytmo) {
         int result;
-        if (!PyArg_ParseTuple(args, "O:pend_event", &pytmo) ||
-            !PyFloat_Check(pytmo)) {
+        if (!PyFloat_Check(pytmo)) {
             pyca_raise_pyexc("pend_event", "error parsing arguments");
         }
         double timeout = PyFloat_AsDouble(pytmo);
@@ -669,10 +660,8 @@ extern "C" {
         Py_RETURN_NONE;
     }    
 
-    static PyObject* set_numpy(PyObject*, PyObject* args) {
-        PyObject* np;
-        if (!PyArg_ParseTuple(args, "O:use_numpy", &np) ||
-            !PyBool_Check(np)) {
+    static PyObject* set_numpy(PyObject*, PyObject* np) {
+        if (!PyBool_Check(np)) {
             pyca_raise_pyexc("use_numpy", "error parsing arguments");
         }
         numpy_arrays = PyObject_IsTrue(np);
@@ -681,14 +670,14 @@ extern "C" {
 
     // Register module methods
     static PyMethodDef pyca_methods[] = {
-        {"attach_context", attach_context, METH_VARARGS},
-        {"new_context", new_context, METH_VARARGS},
-        {"initialize", initialize, METH_VARARGS},
-        {"finalize", finalize, METH_VARARGS},
-        {"pend_io", pend_io, METH_VARARGS},
-        {"flush_io", flush_io, METH_VARARGS},
-        {"pend_event", pend_event, METH_VARARGS},
-        {"set_numpy", set_numpy, METH_VARARGS},
+        {"attach_context", attach_context, METH_NOARGS},
+        {"new_context", new_context, METH_NOARGS},
+        {"initialize", initialize, METH_NOARGS},
+        {"finalize", finalize, METH_NOARGS},
+        {"pend_io", pend_io, METH_O},
+        {"flush_io", flush_io, METH_NOARGS},
+        {"pend_event", pend_event, METH_O},
+        {"set_numpy", set_numpy, METH_O},
         {NULL, NULL}
     };
   
