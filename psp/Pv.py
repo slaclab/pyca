@@ -120,15 +120,19 @@ class Pv(pyca.capv):
         self.cbid = 1
         self.con_cbs = {}
         self.mon_cbs = {}
+        self.rwaccess_cbs = {}
         self.connect_cb = self.__connection_handler
         self.monitor_cb = self.__monitor_handler
         self.getevt_cb = self.__getevt_handler
+        self.rwaccess_cb = self.__rwaccess_handler
 
         # State variables
         self.ismonitored = False
         self.isconnected = False
         self.isinitialized = False
         self.monitor_append = False
+        self.read_access = False
+        self.write_access = False
 
         self.count = count
         self.control = control
@@ -194,6 +198,7 @@ class Pv(pyca.capv):
             self.isinitialized = True
             self.do_initialize = False
             self.getevt_cb = None
+            self.replace_access_rights_event()
             if self.do_monitor:
                 self.monitor(pyca.DBE_VALUE | pyca.DBE_LOG | pyca.DBE_ALARM,
                              self.control, self.count)
@@ -225,6 +230,22 @@ class Pv(pyca.capv):
                 logprint(self.value)
         else:
             logprint("%-30s %s" % (self.name, e))
+    
+    def __rwaccess_handler(self, read_access_state, write_access_state):
+        """
+        Called during a read/write access change event
+        """
+        self.read_access = read_access_state
+        self.write_access = write_access_state
+        for (id, (cb, once)) in self.rwaccess_cbs.items():
+            try:
+                cb(read_access_state, write_access_state)
+            except Exception:
+                err = "Exception in read/write access callback for {}:"
+                logprint(err.format(self.name))
+                traceback.print_exc()
+            if once:
+                self.del_rwaccess_callback(id)
 
     def add_connection_callback(self, cb):
         """
@@ -309,6 +330,50 @@ class Pv(pyca.capv):
             If the id does not correspond to an existing callback
         """
         del self.mon_cbs[id]
+
+    def add_rwaccess_callback(self, cb, once=False):
+        """
+        Add a read/write access state change callback
+
+        Parameters
+        ----------
+        cb : callable
+            A function to be run when the PV object makes a Channel Access sees
+            a read/write access state change event. The function must have the
+            following signature: rwcb(read_access, write_access). Both
+            read_access and write_access are booleans.
+
+        Returns
+        -------
+        id : int
+            An integer ID number for the callback, which can be later used to
+            delete the callback
+
+        See Also
+        --------
+        :meth:`.add_connection_callback`
+        :meth:`.add_monitor_callback`
+        """
+        id = self.cbid
+        self.cbid += 1
+        self.rwaccess_cbs[id] = (cb, once)
+        return id
+
+    def del_rwaccess_callback(self, id):
+        """
+        Delete a read/write access state change callback
+
+        Parameters
+        ----------
+        id : int
+            The id of the callback to be deleted
+
+        Raises
+        ------
+        KeyError
+            If the id does not correspond to an existing callback
+        """
+        del self.rwaccess_cbs[id]
 
     def connect(self, timeout=None):
         """
