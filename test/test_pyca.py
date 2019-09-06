@@ -87,13 +87,9 @@ def setup_pv(pvname, connect=True):
     return pv
 
 
-def test_server_start(server):
-    pass
-
-
 @pytest.mark.timeout(10)
 @pytest.mark.parametrize('pvname', test_pvs)
-def test_create_and_clear_channel(pvname):
+def test_create_and_clear_channel(server, pvname):
     logger.debug('test_create_and_clear_channel %s', pvname)
     pv = setup_pv(pvname)
     assert pv.connect_cb.connected
@@ -106,7 +102,7 @@ def test_create_and_clear_channel(pvname):
 
 @pytest.mark.timeout(10)
 @pytest.mark.parametrize('pvname', test_pvs)
-def test_get_data(pvname):
+def test_get_data(server, pvname):
     logger.debug('test_get_data %s', pvname)
     pv = setup_pv(pvname)
     # get time vars
@@ -129,7 +125,7 @@ def test_get_data(pvname):
 
 @pytest.mark.timeout(10)
 @pytest.mark.parametrize('pvname', test_pvs)
-def test_put_get(pvname):
+def test_put_get(server, pvname):
     logger.debug('test_put_get %s', pvname)
     pv = setup_pv(pvname)
     pv.get_data(False, -1.0)
@@ -157,7 +153,7 @@ def test_put_get(pvname):
 
 @pytest.mark.timeout(10)
 @pytest.mark.parametrize('pvname', test_pvs)
-def test_subscribe(pvname):
+def test_subscribe(server, pvname):
     logger.debug('test_subscribe %s', pvname)
     pv = setup_pv(pvname)
     ev = threading.Event()
@@ -193,7 +189,7 @@ def test_subscribe(pvname):
 
 @pytest.mark.timeout(10)
 @pytest.mark.parametrize('pvname', test_pvs)
-def test_misc(pvname):
+def test_misc(server, pvname):
     logger.debug('test_misc %s', pvname)
     pv = setup_pv(pvname)
     assert isinstance(pv.host(), str)
@@ -205,7 +201,7 @@ def test_misc(pvname):
 
 
 @pytest.mark.timeout(10)
-def test_waveform():
+def test_waveform(server):
     logger.debug('test_waveform')
     pv = setup_pv(pvbase + ":WAVE")
     # Do as a tuple
@@ -229,7 +225,7 @@ def test_waveform():
 
 
 @pytest.mark.timeout(10)
-def test_threads():
+def test_threads(server):
     logger.debug('test_threads')
 
     def some_thread_thing(pvname):
