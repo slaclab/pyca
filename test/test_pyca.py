@@ -124,6 +124,7 @@ def test_get_data(pvname):
         assert key in pv.data
     # check that value is not None
     assert pv.data['value'] is not None
+    pv.clear_channel()
 
 
 @pytest.mark.timeout(10)
@@ -151,6 +152,7 @@ def test_put_get(pvname):
     assert pv.getevt_cb.wait(timeout=1)
     recv_value = pv.data['value']
     assert recv_value == new_value
+    pv.clear_channel()
 
 
 @pytest.mark.timeout(10)
@@ -186,6 +188,7 @@ def test_subscribe(pvname):
     assert ev.wait(timeout=1)
     recv_value = pv.data['value']
     assert recv_value == new_value
+    pv.clear_channel()
 
 
 @pytest.mark.timeout(10)
@@ -198,6 +201,7 @@ def test_misc(pvname):
     assert isinstance(pv.count(), int)
     assert isinstance(pv.type(), str)
     assert isinstance(pv.rwaccess(), int)
+    pv.clear_channel()
 
 
 @pytest.mark.timeout(10)
@@ -221,6 +225,7 @@ def test_waveform():
     val = pv.data['value']
     assert isinstance(val, np.ndarray)
     assert len(val) == pv.count()
+    pv.clear_channel()
 
 
 @pytest.mark.timeout(10)
@@ -234,6 +239,7 @@ def test_threads():
         pyca.flush_io()
         assert pv.getevt_cb.wait(timeout=1)
         assert isinstance(pv.data['value'], tuple)
+        pv.clear_channel()
 
     pvname = pvbase + ":WAVE"
     thread = threading.Thread(target=some_thread_thing, args=(pvname,))

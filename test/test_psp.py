@@ -40,6 +40,7 @@ def test_get(pvname):
     pv = setup_pv(pvname)
     value = pv.get()
     assert value is not None
+    pv.disconnect()
 
 
 @pytest.mark.timeout(10)
@@ -59,6 +60,7 @@ def test_put_get(pvname):
     logger.debug('caput %s %s', pvname, new_value)
     pv.put(new_value, timeout=1.0)
     assert pv.get() == new_value
+    pv.disconnect()
 
 
 @pytest.mark.timeout(10)
@@ -83,6 +85,7 @@ def test_monitor(pvname):
         time.sleep(0.1)
         n += 1
     assert pv.value == new_value
+    pv.disconnect()
 
 
 @pytest.mark.timeout(10)
@@ -95,6 +98,7 @@ def test_misc(pvname):
     assert isinstance(pv.count, int)
     assert isinstance(pv.type(), str)
     assert isinstance(pv.rwaccess(), int)
+    pv.disconnect()
 
 
 @pytest.mark.timeout(10)
@@ -111,6 +115,7 @@ def test_waveform():
     val = pv.get()
     assert isinstance(val, np.ndarray)
     assert len(val) == pv.count
+    pv.disconnect()
 
 
 @pytest.mark.timeout(10)
@@ -122,6 +127,7 @@ def test_threads():
         pv = setup_pv(pvname)
         val = pv.get()
         assert isinstance(val, tuple)
+        pv.disconnect()
 
     pvname = pvbase + ":WAVE"
     thread = threading.Thread(target=some_thread_thing, args=(pvname,))
