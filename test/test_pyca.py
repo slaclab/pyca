@@ -87,13 +87,9 @@ def setup_pv(pvname, connect=True):
     return pv
 
 
-def test_server_start(server):
-    pass
-
-
 @pytest.mark.timeout(10)
 @pytest.mark.parametrize('pvname', test_pvs)
-def test_create_and_clear_channel(pvname):
+def test_create_and_clear_channel(server, pvname):
     logger.debug('test_create_and_clear_channel %s', pvname)
     pv = setup_pv(pvname)
     assert pv.connect_cb.connected
@@ -106,7 +102,7 @@ def test_create_and_clear_channel(pvname):
 
 @pytest.mark.timeout(10)
 @pytest.mark.parametrize('pvname', test_pvs)
-def test_get_data(pvname):
+def test_get_data(server, pvname):
     logger.debug('test_get_data %s', pvname)
     pv = setup_pv(pvname)
     # get time vars
@@ -124,11 +120,12 @@ def test_get_data(pvname):
         assert key in pv.data
     # check that value is not None
     assert pv.data['value'] is not None
+    pv.clear_channel()
 
 
 @pytest.mark.timeout(10)
 @pytest.mark.parametrize('pvname', test_pvs)
-def test_put_get(pvname):
+def test_put_get(server, pvname):
     logger.debug('test_put_get %s', pvname)
     pv = setup_pv(pvname)
     pv.get_data(False, -1.0)
@@ -151,11 +148,12 @@ def test_put_get(pvname):
     assert pv.getevt_cb.wait(timeout=1)
     recv_value = pv.data['value']
     assert recv_value == new_value
+    pv.clear_channel()
 
 
 @pytest.mark.timeout(10)
 @pytest.mark.parametrize('pvname', test_pvs)
-def test_subscribe(pvname):
+def test_subscribe(server, pvname):
     logger.debug('test_subscribe %s', pvname)
     pv = setup_pv(pvname)
     ev = threading.Event()
@@ -186,11 +184,12 @@ def test_subscribe(pvname):
     assert ev.wait(timeout=1)
     recv_value = pv.data['value']
     assert recv_value == new_value
+    pv.clear_channel()
 
 
 @pytest.mark.timeout(10)
 @pytest.mark.parametrize('pvname', test_pvs)
-def test_misc(pvname):
+def test_misc(server, pvname):
     logger.debug('test_misc %s', pvname)
     pv = setup_pv(pvname)
     assert isinstance(pv.host(), str)
@@ -198,10 +197,11 @@ def test_misc(pvname):
     assert isinstance(pv.count(), int)
     assert isinstance(pv.type(), str)
     assert isinstance(pv.rwaccess(), int)
+    pv.clear_channel()
 
 
 @pytest.mark.timeout(10)
-def test_waveform():
+def test_waveform(server):
     logger.debug('test_waveform')
     pv = setup_pv(pvbase + ":WAVE")
     # Do as a tuple
@@ -221,10 +221,11 @@ def test_waveform():
     val = pv.data['value']
     assert isinstance(val, np.ndarray)
     assert len(val) == pv.count()
+    pv.clear_channel()
 
 
 @pytest.mark.timeout(10)
-def test_threads():
+def test_threads(server):
     logger.debug('test_threads')
 
     def some_thread_thing(pvname):
@@ -234,6 +235,7 @@ def test_threads():
         pyca.flush_io()
         assert pv.getevt_cb.wait(timeout=1)
         assert isinstance(pv.data['value'], tuple)
+        pv.clear_channel()
 
     pvname = pvbase + ":WAVE"
     thread = threading.Thread(target=some_thread_thing, args=(pvname,))

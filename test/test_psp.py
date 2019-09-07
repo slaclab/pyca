@@ -20,13 +20,9 @@ def setup_pv(pvname, connect=True):
     return pv
 
 
-def test_server_start(server):
-    pass
-
-
 @pytest.mark.timeout(10)
 @pytest.mark.parametrize('pvname', test_pvs)
-def test_connect_and_disconnect(pvname):
+def test_connect_and_disconnect(server, pvname):
     logger.debug('test_create_and_clear_channel %s', pvname)
     pv = setup_pv(pvname)
     assert pv.isconnected
@@ -35,16 +31,17 @@ def test_connect_and_disconnect(pvname):
 
 @pytest.mark.timeout(10)
 @pytest.mark.parametrize('pvname', test_pvs)
-def test_get(pvname):
+def test_get(server, pvname):
     logger.debug('test_get_data %s', pvname)
     pv = setup_pv(pvname)
     value = pv.get()
     assert value is not None
+    pv.disconnect()
 
 
 @pytest.mark.timeout(10)
 @pytest.mark.parametrize('pvname', test_pvs)
-def test_put_get(pvname):
+def test_put_get(server, pvname):
     logger.debug('test_put_get %s', pvname)
     pv = setup_pv(pvname)
     old_value = pv.get()
@@ -59,11 +56,12 @@ def test_put_get(pvname):
     logger.debug('caput %s %s', pvname, new_value)
     pv.put(new_value, timeout=1.0)
     assert pv.get() == new_value
+    pv.disconnect()
 
 
 @pytest.mark.timeout(10)
 @pytest.mark.parametrize('pvname', test_pvs)
-def test_monitor(pvname):
+def test_monitor(server, pvname):
     logger.debug('test_subscribe %s', pvname)
     pv = setup_pv(pvname)
     old_value = pv.get()
@@ -83,11 +81,12 @@ def test_monitor(pvname):
         time.sleep(0.1)
         n += 1
     assert pv.value == new_value
+    pv.disconnect()
 
 
 @pytest.mark.timeout(10)
 @pytest.mark.parametrize('pvname', test_pvs)
-def test_misc(pvname):
+def test_misc(server, pvname):
     logger.debug('test_misc %s', pvname)
     pv = setup_pv(pvname)
     assert isinstance(pv.host(), str)
@@ -95,10 +94,11 @@ def test_misc(pvname):
     assert isinstance(pv.count, int)
     assert isinstance(pv.type(), str)
     assert isinstance(pv.rwaccess(), int)
+    pv.disconnect()
 
 
 @pytest.mark.timeout(10)
-def test_waveform():
+def test_waveform(server):
     logger.debug('test_waveform')
     pv = setup_pv(pvbase + ":WAVE")
     # Do as a tuple
@@ -111,10 +111,11 @@ def test_waveform():
     val = pv.get()
     assert isinstance(val, np.ndarray)
     assert len(val) == pv.count
+    pv.disconnect()
 
 
 @pytest.mark.timeout(10)
-def test_threads():
+def test_threads(server):
     logger.debug('test_threads')
 
     def some_thread_thing(pvname):
@@ -122,6 +123,7 @@ def test_threads():
         pv = setup_pv(pvname)
         val = pv.get()
         assert isinstance(val, tuple)
+        pv.disconnect()
 
     pvname = pvbase + ":WAVE"
     thread = threading.Thread(target=some_thread_thing, args=(pvname,))
