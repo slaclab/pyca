@@ -596,7 +596,6 @@ class Pv(pyca.capv):
                                      'of {:}'.format(self.value, self.name))
             else:
                 return str(self.value)
-            
         return self.value
 
     def put(self, value, timeout=DEFAULT_TIMEOUT, **kw):
