@@ -590,8 +590,11 @@ class Pv(pyca.capv):
                                      'of {:}'.format(self.value, self.name))
             else:
                 return str(self.value)
-
-        return self.value
+        try:
+            return self.value
+        except KeyError:
+            # If timeout=None, there's a chance that self.value isn't populated yet.
+            return None
 
     def put(self, value, timeout=DEFAULT_TIMEOUT, **kw):
         """
