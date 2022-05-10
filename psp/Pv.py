@@ -436,7 +436,7 @@ class Pv(pyca.capv):
         self.isconnected = False
 
     def monitor(self, mask=pyca.DBE_VALUE | pyca.DBE_LOG | pyca.DBE_ALARM,
-                ctrl=None, count=None):
+                ctrl=None, count=None, wait_for_init=True):
         """
         Subscribe to monitor events from the PV channel
 
@@ -458,6 +458,11 @@ class Pv(pyca.capv):
         count : int, optional
             Subsection of waveform record to monitor. By default,
             :attr:`.count` is used
+         
+        wait_for_init : bool, optional
+            Whether to wait for an initial value to arrive for the PV before
+            returning.  If False, the PV's value and metadata might not be
+            populated when this function returns.  Defaults to True.
 
         See Also
         --------
@@ -485,10 +490,11 @@ class Pv(pyca.capv):
         #
         # The purpose of this step is to initialize the .value when we call
         # .monitor() in an interactive session.
-        try:
-            self.get()
-        except pyca.caexc:
-            pass
+        if wait_for_init:
+           try:
+               self.get()
+           except pyca.caexc:
+               pass
 
         self.ismonitored = True
 
@@ -525,7 +531,9 @@ class Pv(pyca.capv):
             Whether to get the control form information
 
         timeout : float or None, optional
-            Time to wait for data to be returned. If None, no timeout is used
+            Time to wait for data to be returned. If None, no timeout is used.
+            If timeout is None, this method may return None if the PV's
+            value has not arrived yet.
 
         as_string : bool , optional
             Return the value as a string type. For Enum PVs, the default
@@ -574,6 +582,10 @@ class Pv(pyca.capv):
         if tmo > 0 and DEBUG != 0:
             logprint("got %s\n" % self.value.__str__())
 
+        if "value" not in self.data:
+            # If the timeout was None, there's a chance that the value hasn't arrived yet.
+            return None
+
         if as_string:
             if self.type() == 'DBF_ENUM':
                 enums = self.get_enum_set(timeout=tmo)
@@ -584,7 +596,6 @@ class Pv(pyca.capv):
                                      'of {:}'.format(self.value, self.name))
             else:
                 return str(self.value)
-
         return self.value
 
     def put(self, value, timeout=DEFAULT_TIMEOUT, **kw):
