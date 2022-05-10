@@ -43,12 +43,13 @@ extern "C" {
     static PyObject* clear_channel(PyObject* self, PyObject*)
     {
         capv* pv = reinterpret_cast<capv*>(self);
-
         chid cid = pv->cid;
         if (!cid) {
             pyca_raise_pyexc_pv("clear_channel", "channel is null", pv);
         }
+        PyThreadState *state = PyEval_SaveThread();
         int result = ca_clear_channel(cid);
+        PyEval_RestoreThread(state);
         if (result != ECA_NORMAL) {
             pyca_raise_caexc_pv("ca_clear_channel", result, pv);
         }
@@ -124,7 +125,7 @@ extern "C" {
             pv->didmon = 0;
             Py_RETURN_NONE;
         }
-
+        PyThreadState *state = PyEval_SaveThread();
         evid eid = pv->eid;
         if (eid) {
             int result = ca_clear_subscription(eid);
@@ -133,6 +134,7 @@ extern "C" {
             }
             pv->eid = 0;
         }
+        PyEval_RestoreThread(state);
         Py_RETURN_NONE;
     }
 
