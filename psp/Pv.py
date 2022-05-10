@@ -531,7 +531,9 @@ class Pv(pyca.capv):
             Whether to get the control form information
 
         timeout : float or None, optional
-            Time to wait for data to be returned. If None, no timeout is used
+            Time to wait for data to be returned. If None, no timeout is used.
+            If timeout is None, this method may return None if the PV's
+            value has not arrived yet.
 
         as_string : bool , optional
             Return the value as a string type. For Enum PVs, the default
@@ -580,6 +582,10 @@ class Pv(pyca.capv):
         if tmo > 0 and DEBUG != 0:
             logprint("got %s\n" % self.value.__str__())
 
+        if "value" not in self.data:
+            # If the timeout was None, there's a chance that the value hasn't arrived yet.
+            return None
+
         if as_string:
             if self.type() == 'DBF_ENUM':
                 enums = self.get_enum_set(timeout=tmo)
@@ -590,11 +596,8 @@ class Pv(pyca.capv):
                                      'of {:}'.format(self.value, self.name))
             else:
                 return str(self.value)
-        try:
-            return self.value
-        except KeyError:
-            # If timeout=None, there's a chance that self.value isn't populated yet.
-            return None
+            
+        return self.value
 
     def put(self, value, timeout=DEFAULT_TIMEOUT, **kw):
         """
