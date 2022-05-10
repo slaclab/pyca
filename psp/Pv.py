@@ -459,7 +459,7 @@ class Pv(pyca.capv):
             Subsection of waveform record to monitor. By default,
             :attr:`.count` is used
          
-         wait_for_init : bool, optional
+        wait_for_init : bool, optional
             Whether to wait for an initial value to arrive for the PV before
             returning.  If False, the PV's value and metadata might not be
             populated when this function returns.  Defaults to True.
