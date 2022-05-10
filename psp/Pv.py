@@ -436,7 +436,7 @@ class Pv(pyca.capv):
         self.isconnected = False
 
     def monitor(self, mask=pyca.DBE_VALUE | pyca.DBE_LOG | pyca.DBE_ALARM,
-                ctrl=None, count=None):
+                ctrl=None, count=None, wait_for_init=True):
         """
         Subscribe to monitor events from the PV channel
 
@@ -458,6 +458,11 @@ class Pv(pyca.capv):
         count : int, optional
             Subsection of waveform record to monitor. By default,
             :attr:`.count` is used
+         
+         wait_for_init : bool, optional
+            Whether to wait for an initial value to arrive for the PV before
+            returning.  If False, the PV's value and metadata might not be
+            populated when this function returns.  Defaults to True.
 
         See Also
         --------
@@ -485,10 +490,11 @@ class Pv(pyca.capv):
         #
         # The purpose of this step is to initialize the .value when we call
         # .monitor() in an interactive session.
-        try:
-            self.get()
-        except pyca.caexc:
-            pass
+        if wait_for_init:
+           try:
+               self.get()
+           except pyca.caexc:
+               pass
 
         self.ismonitored = True
 
