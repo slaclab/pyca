@@ -225,8 +225,8 @@ class Pv(pyca.capv):
                 self.del_monitor_callback(id)
         if e is None:
             if DEBUG != 0:
-                logprint("{} monitoring {} {}".format(utils.now(), self.name,
-                                                  self.timestr()))
+                logprint("{} monitoring {} {}".format(
+                         utils.now(), self.name, self.timestr()))
                 logprint(self.value)
         else:
             logprint("%-30s %s" % (self.name, e))
@@ -491,10 +491,10 @@ class Pv(pyca.capv):
         # The purpose of this step is to initialize the .value when we call
         # .monitor() in an interactive session.
         if wait_for_init:
-           try:
-               self.get()
-           except pyca.caexc:
-               pass
+            try:
+                self.get()
+            except pyca.caexc:
+                pass
 
         self.ismonitored = True
 
@@ -790,7 +790,7 @@ class Pv(pyca.capv):
         result = self.wait_condition(condition, timeout, True)
         if not result:
             logprint("waiting for pv {} to become {} timed out".format(self.name,
-                                                                   value))
+                                                                       value))
         return result
 
     def wait_for_range(self, low, high, timeout=60):
