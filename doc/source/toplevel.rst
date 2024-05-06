@@ -17,7 +17,7 @@ existing object with that PV name, before creating a new object. Keep in mind
 this may not always be the optimal behavior. For instance in the
 Camviewer application, which connects to image PVs twice, once with a small
 ``count`` setting to monitor a smaller subsection of the image for changes, and a
-second time, without monitoring, to retrieve the whole image when needed.   
+second time, without monitoring, to retrieve the whole image when needed.
 
 Top Level API
 ^^^^^^^^^^^^^

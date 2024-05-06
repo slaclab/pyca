@@ -1,5 +1,5 @@
-import sys
 import getopt
+import sys
 
 
 class Options:

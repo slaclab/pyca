@@ -12,10 +12,8 @@ Table of Contents
 -----------------
 .. toctree::
    :maxdepth: 1
-   
+
    toplevel.rst
    pv.rst
    advanced.rst
    release.rst
-
-

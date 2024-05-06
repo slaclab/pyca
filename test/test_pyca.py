@@ -1,11 +1,13 @@
-import sys
-import time
-import threading
 import logging
-import pytest
+import sys
+import threading
+import time
+
 import numpy as np
+import pytest
+from conftest import pvbase, test_pvs
+
 import pyca
-from conftest import test_pvs, pvbase
 
 if sys.version_info.major >= 3:
     long = int

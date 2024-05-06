@@ -170,21 +170,21 @@ IOC providing a PV with that name.
 
 The connection (a "channel") to a PV goes through the following
 states:
-                                             +----------------+  
-                                             v                |  
-                                             Update Received -+  
-                                             ^               /   
-Disconnected                                 |         +----+    
-      |                   +-> MonitorRequested -      /          
-      v                  /                      \    v           
+                                             +----------------+
+                                             v                |
+                                             Update Received -+
+                                             ^               /
+Disconnected                                 |         +----+
+      |                   +-> MonitorRequested -      /
+      v                  /                      \    v
 Conn Requst -> Connected                         +-> Disconnected
-                         \                      /    ^           
-                          +-> Update Request --+     \           
-                                           |          \          
-                                           |           \         
-                                           |            \        
-                                           v             |       
-                                           Update Received       
+                         \                      /    ^
+                          +-> Update Request --+     \
+                                           |          \
+                                           |           \
+                                           |            \
+                                           v             |
+                                           Update Received
 
 The upper path is taken when a PV is being monitored - the CA server
 continuously sends unsolicited updates.  The lower path is taken when
@@ -253,7 +253,7 @@ pyca.capv member variables:
       this PV.  The dictionary items are as follows:
 
       data['status']
-         The alarm status of the PV.  
+         The alarm status of the PV.
 
       data['severity']
          The severity of the PV's current alarm.

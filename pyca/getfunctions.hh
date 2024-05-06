@@ -96,7 +96,7 @@ int _numpy_array_type(const dbr_double_t*)
   return NPY_FLOAT64;
 }
 
-template<class T> static inline 
+template<class T> static inline
 PyObject* _pyca_get_value(capv* pv, const T* dbrv, long count)
 {
   if (count == 1) {
@@ -143,7 +143,7 @@ void _pyca_get_sts(capv* pv, const T* dbrv, long count)
 }
 
 // Copy channel access time objects into python
-template<class T> static inline 
+template<class T> static inline
 void _pyca_get_time(capv* pv, const T* dbrv, long count)
 {
   PyObject* pydata = pv->data;
@@ -152,12 +152,12 @@ void _pyca_get_time(capv* pv, const T* dbrv, long count)
   _pyca_setitem(pydata, "secs",        _pyca_get(dbrv->stamp.secPastEpoch));
   _pyca_setitem(pydata, "nsec",        _pyca_get(dbrv->stamp.nsec));
   _pyca_setitem(pydata, "value",       _pyca_get_value(pv, dbrv, count));
-  
+
 }
 
 // Copy channel access control objects into python
-template<class T> static inline 
-void _pyca_get_ctrl_long(capv* pv, const T* dbrv, long count) 
+template<class T> static inline
+void _pyca_get_ctrl_long(capv* pv, const T* dbrv, long count)
 {
   PyObject* pydata = pv->data;
   _pyca_setitem(pydata, "status",      _pyca_get(dbrv->status));
@@ -174,8 +174,8 @@ void _pyca_get_ctrl_long(capv* pv, const T* dbrv, long count)
   _pyca_setitem(pydata, "value",       _pyca_get_value(pv, dbrv, count));
 }
 
-template<class T> static inline 
-void _pyca_get_ctrl_enum(capv* pv, const T* dbrv, long count) 
+template<class T> static inline
+void _pyca_get_ctrl_enum(capv* pv, const T* dbrv, long count)
 {
   PyObject* pydata = pv->data;
   _pyca_setitem(pydata, "status",      _pyca_get(dbrv->status));
@@ -184,8 +184,8 @@ void _pyca_get_ctrl_enum(capv* pv, const T* dbrv, long count)
   _pyca_setitem(pydata, "value",       _pyca_get_value(pv, dbrv, count));
 }
 
-template<class T> static inline 
-void _pyca_get_ctrl_double(capv* pv, const T* dbrv, long count) 
+template<class T> static inline
+void _pyca_get_ctrl_double(capv* pv, const T* dbrv, long count)
 {
   PyObject* pydata = pv->data;
   _pyca_setitem(pydata, "status",      _pyca_get(dbrv->status));
@@ -203,22 +203,22 @@ void _pyca_get_ctrl_double(capv* pv, const T* dbrv, long count)
   _pyca_setitem(pydata, "value",       _pyca_get_value(pv, dbrv, count));
 }
 
-static inline 
-void _pyca_get_gr_enum(capv* pv, const struct dbr_gr_enum* dbrv, long count) 
+static inline
+void _pyca_get_gr_enum(capv* pv, const struct dbr_gr_enum* dbrv, long count)
 {
   PyObject* pydata = pv->data;
   PyObject* enstrs = PyTuple_New(dbrv->no_str);
   for (int i=0; i < dbrv->no_str; i++) {
     // TODO:  This is no bueno.  We need a new accessor above for
-    //        char arrays...  
+    //        char arrays...
     PyTuple_SET_ITEM(enstrs, i, _pyca_get(dbrv->strs[i]));
   }
   _pyca_setitem(pydata, "enum_set", enstrs);
 }
 
-static const void* _pyca_event_process(capv* pv, 
-                                       const void* buffer, 
-                                       short dbr_type, 
+static const void* _pyca_event_process(capv* pv,
+                                       const void* buffer,
+                                       short dbr_type,
                                        long count)
 {
   const db_access_val* dbr = reinterpret_cast<const db_access_val*>(buffer);
@@ -274,8 +274,8 @@ static const void* _pyca_event_process(capv* pv,
   return buffer;
 }
 
-static void* _pyca_adjust_buffer_size(capv* pv, 
-                                      short dbr_type, 
+static void* _pyca_adjust_buffer_size(capv* pv,
+                                      short dbr_type,
                                       long count,
                                       int nxtbuf)
 {
@@ -285,43 +285,43 @@ static void* _pyca_adjust_buffer_size(capv* pv,
     size = sizeof(dbr_time_string) + sizeof(dbr_string_t)*(count-1);
     break;
   case DBR_TIME_ENUM:
-    size = sizeof(dbr_time_enum) + sizeof(dbr_enum_t)*(count-1);    
+    size = sizeof(dbr_time_enum) + sizeof(dbr_enum_t)*(count-1);
     break;
   case DBR_TIME_CHAR:
-    size = sizeof(dbr_time_char) + sizeof(dbr_char_t)*(count-1);    
+    size = sizeof(dbr_time_char) + sizeof(dbr_char_t)*(count-1);
     break;
   case DBR_TIME_SHORT:
-    size = sizeof(dbr_time_short) + sizeof(dbr_short_t)*(count-1);    
+    size = sizeof(dbr_time_short) + sizeof(dbr_short_t)*(count-1);
     break;
   case DBR_TIME_LONG:
-    size = sizeof(dbr_time_long) + sizeof(dbr_long_t)*(count-1);    
+    size = sizeof(dbr_time_long) + sizeof(dbr_long_t)*(count-1);
     break;
   case DBR_TIME_FLOAT:
-    size = sizeof(dbr_time_float) + sizeof(dbr_float_t)*(count-1);    
+    size = sizeof(dbr_time_float) + sizeof(dbr_float_t)*(count-1);
     break;
   case DBR_TIME_DOUBLE:
-    size = sizeof(dbr_time_double) + sizeof(dbr_double_t)*(count-1);    
+    size = sizeof(dbr_time_double) + sizeof(dbr_double_t)*(count-1);
     break;
   case DBR_CTRL_STRING:
     size = sizeof(dbr_sts_string) + sizeof(dbr_string_t)*(count-1);
     break;
   case DBR_CTRL_ENUM:
-    size = sizeof(dbr_ctrl_enum) + sizeof(dbr_enum_t)*(count-1);    
+    size = sizeof(dbr_ctrl_enum) + sizeof(dbr_enum_t)*(count-1);
     break;
   case DBR_CTRL_CHAR:
-    size = sizeof(dbr_ctrl_char) + sizeof(dbr_char_t)*(count-1);    
+    size = sizeof(dbr_ctrl_char) + sizeof(dbr_char_t)*(count-1);
     break;
   case DBR_CTRL_SHORT:
-    size = sizeof(dbr_ctrl_short) + sizeof(dbr_short_t)*(count-1);    
+    size = sizeof(dbr_ctrl_short) + sizeof(dbr_short_t)*(count-1);
     break;
   case DBR_CTRL_LONG:
-    size = sizeof(dbr_ctrl_long) + sizeof(dbr_long_t)*(count-1);    
+    size = sizeof(dbr_ctrl_long) + sizeof(dbr_long_t)*(count-1);
     break;
   case DBR_CTRL_FLOAT:
-    size = sizeof(dbr_ctrl_float) + sizeof(dbr_float_t)*(count-1);    
+    size = sizeof(dbr_ctrl_float) + sizeof(dbr_float_t)*(count-1);
     break;
   case DBR_CTRL_DOUBLE:
-    size = sizeof(dbr_ctrl_double) + sizeof(dbr_double_t)*(count-1);    
+    size = sizeof(dbr_ctrl_double) + sizeof(dbr_double_t)*(count-1);
     break;
   default:
     return NULL;

@@ -1,7 +1,8 @@
 import logging
+
+import pytest
 from pcaspy import Driver, SimpleServer
 from pcaspy.tools import ServerThread
-import pytest
 
 logger = logging.getLogger(__name__)
 

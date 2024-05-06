@@ -115,4 +115,3 @@ static void pyca_putevent_handler(struct event_handler_args args)
   }
   PyGILState_Release(gstate);
 }
-
