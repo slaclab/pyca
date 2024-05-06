@@ -1,33 +1,41 @@
-{% set data = load_setup_py_data() %}
-{% set EPICS = '3.14.12.6' %}
+{% set package_name = "pyca" %}
+{% set import_name = "pyca" %}
+{% set version = load_file_regex(load_file=os.path.join(import_name, "_version.py"), regex_pattern=".*version = '(\S+)'").group(1) %}
 
 package:
-  name: pyca
-  version: {{ data.get('version') }}
+  name: {{ package_name }}
+  version: {{ version }}
 
 source:
   path: ..
 
 build:
-  number: 1
-  string: py{{ py }}np{{ np }}epics{{ EPICS }}
+  number: 0
+  noarch: python
+  script: {{ PYTHON }} -m pip install . -vv
+
+
 
 requirements:
   build:
-    - python {{ PY_VER }}*
-    - setuptools
-    - epics-base {{ EPICS }}*
-    - numpy {{ NPY_VER }}*
-
+  - python {{ PY_VER }}*
+  - epics-base {{ EPICS }}*
+  - numpy {{ NPY_VER }}*
+  - setuptools_scm
+  - pip
   run:
-    - python {{ PY_VER }}*
-    - epics-base {{ EPICS }}*
-    - numpy {{ NPY_VER }}*
+  - python {{ PY_VER }}*
+  - epics-base {{ EPICS }}*
+  - numpy {{ NPY_VER }}*
+
+
 
 test:
   imports:
-    - pyca
-    - psp
+  - pyca
+  - psp
+
+
 
 about:
   home: https://github.com/slaclab/pyca
