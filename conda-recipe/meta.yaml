@@ -32,6 +32,8 @@ requirements:
 
 
 test:
+  requires:
+  - pcaspy
   imports:
   - pyca
   - psp

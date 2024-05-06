@@ -1,6 +1,8 @@
-from setuptools import setup, Extension
-import os, sys
+import os
+import sys
+
 import numpy as np
+from setuptools import Extension, setup
 
 if sys.platform == 'darwin':
     libsrc = 'Darwin'
@@ -20,11 +22,11 @@ pyca = Extension('pyca',
                  language='c++',
                  sources=['pyca/pyca.cc'],
                  include_dirs=['pyca', epics_inc,
-                                epics_inc + '/os/' + libsrc,
-                                epics_inc + '/compiler/' + compiler,
-                                numpy_inc],
-                 library_dirs=[epics_lib,numpy_lib],
-                 runtime_library_dirs=[epics_lib,numpy_lib],
+                               epics_inc + '/os/' + libsrc,
+                               epics_inc + '/compiler/' + compiler,
+                               numpy_inc],
+                 library_dirs=[epics_lib, numpy_lib],
+                 runtime_library_dirs=[epics_lib, numpy_lib],
                  libraries=['Com', 'ca'])
 
 setup(ext_modules=[pyca,])

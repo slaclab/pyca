@@ -1,6 +1,6 @@
 [build-system]
 build-backend = "setuptools.build_meta"
-requires = [ "setuptools>=45", "setuptools_scm[toml]>=6.2",]
+requires = [ "setuptools>=45", "setuptools_scm[toml]>=6.2", "numpy"]
 
 [project]
 classifiers = [ "Development Status :: 2 - Pre-Alpha", "Natural Language :: English", "Programming Language :: Python :: 3",]
@@ -20,11 +20,11 @@ include_package_data = true
 file = "LICENSE.md"
 
 [tool.setuptools_scm]
-write_to = "pyca/_version.py"
+write_to = "psp/_version.py"
 
 [tool.setuptools.packages.find]
 where = [ ".",]
-include = [ "pyca*",]
+include = ["psp*",]
 namespaces = false
 
 [tool.setuptools.dynamic.readme]
