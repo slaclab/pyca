@@ -19,10 +19,10 @@ test_pvs = [pvbase + ":" + key for key in pvdb.keys()]
 # We need a trivial subclass of Driver for pcaspy to work
 class TestDriver(Driver):
     def __init__(self):
-        super(TestDriver, self).__init__()
+        super().__init__()
 
 
-class TestServer(object):
+class TestServer:
     """
     Class to create temporary pvs to check in psp_plugin
     """

@@ -1,4 +1,3 @@
-from __future__ import print_function
 import time
 import warnings
 import threading
@@ -178,7 +177,7 @@ class Pv(pyca.capv):
 
         if self.count is None:
             try:
-                self.count = super(Pv, self).count()
+                self.count = super().count()
             except pyca.pyexc:
                 pass
 
@@ -225,7 +224,7 @@ class Pv(pyca.capv):
                 self.del_monitor_callback(id)
         if e is None:
             if DEBUG != 0:
-                logprint("%s monitoring %s %s" % (utils.now(), self.name,
+                logprint("{} monitoring {} {}".format(utils.now(), self.name,
                                                   self.timestr()))
                 logprint(self.value)
         else:
@@ -407,7 +406,7 @@ class Pv(pyca.capv):
             self.create_channel()
 
         except pyca.pyexc:
-            logprint('Channel for PV {:} already exists'.format(self.name))
+            logprint(f'Channel for PV {self.name} already exists')
             return self.isconnected
 
         if timeout is not None:
@@ -621,7 +620,7 @@ class Pv(pyca.capv):
         TODO : Add a put_complete which confirms the success of the function
         """
         if DEBUG != 0:
-            logprint("caput %s in %s\n" % (value, self.name))
+            logprint("caput {} in {}\n".format(value, self.name))
 
         if timeout:
             try:
@@ -789,7 +788,7 @@ class Pv(pyca.capv):
         condition = utils.all_condition(lambda: self.value == value)
         result = self.wait_condition(condition, timeout, True)
         if not result:
-            logprint("waiting for pv %s to become %s timed out" % (self.name,
+            logprint("waiting for pv {} to become {} timed out".format(self.name,
                                                                    value))
         return result
 

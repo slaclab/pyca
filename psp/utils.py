@@ -70,7 +70,7 @@ def all_condition(condition):
     return check_condition(all, condition)
 
 
-class TimeoutSem(object):
+class TimeoutSem:
     """
     Context manager/wrapper for semaphores, with a timeout on the acquire call.
     Timeout < 0 blocks indefinitely.

@@ -13,7 +13,7 @@ if sys.version_info.major >= 3:
 logger = logging.getLogger(__name__)
 
 
-class ConnectCallback(object):
+class ConnectCallback:
     def __init__(self, name):
         self.name = name
         self.connected = False
@@ -52,7 +52,7 @@ class ConnectCallback(object):
                 self.cev.clear()
 
 
-class GetCallback(object):
+class GetCallback:
     def __init__(self, name):
         self.name = name
         self.gev = threading.Event()

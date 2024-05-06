@@ -2,7 +2,7 @@ import sys
 import getopt
 
 
-class Options(object):
+class Options:
     def __init__(self, mandatory, optional=[], switches=[]):
         self.opts = {}
 
@@ -18,9 +18,9 @@ class Options(object):
     def usage(self, notes=''):
         msg = 'usage: %s' % (sys.argv[0])
         for option in self.__mand:
-            msg += ' --%s <%sname>' % (option, option)
+            msg += ' --{} <{}name>'.format(option, option)
         for option in self.__optn:
-            msg += ' [--%s <%sname>]' % (option, option)
+            msg += ' [--{} <{}name>]'.format(option, option)
         for option in self.__swtc:
             msg += ' [--%s]' % (option)
         if notes != '':
