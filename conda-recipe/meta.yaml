@@ -1,6 +1,7 @@
 {% set package_name = "pyca" %}
 {% set import_name = "pyca" %}
 {% set version = load_file_regex(load_file=os.path.join(import_name, "_version.py"), regex_pattern=".*version = '(\S+)'").group(1) %}
+{% set EPICS = '3.14.12.6' %}
 
 package:
   name: {{ package_name }}
