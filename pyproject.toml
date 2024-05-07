@@ -1,0 +1,37 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = [ "setuptools>=45", "setuptools_scm[toml]>=6.2", "numpy"]
+
+[project]
+classifiers = [ "Development Status :: 2 - Pre-Alpha", "Natural Language :: English", "Programming Language :: Python :: 3",]
+description = "python channel access library"
+dynamic = [ "version", "readme", "dependencies", "optional-dependencies",]
+keywords = []
+name = "pyca"
+requires-python = ">=3.9"
+[[project.authors]]
+name = "SLAC National Accelerator Laboratory"
+
+[options]
+zip_safe = false
+include_package_data = true
+
+[project.license]
+file = "LICENSE.md"
+
+[tool.setuptools_scm]
+write_to = "psp/_version.py"
+
+[tool.setuptools.packages.find]
+where = [ ".",]
+include = ["psp*",]
+namespaces = false
+
+[tool.setuptools.dynamic.readme]
+file = "README.md"
+
+[tool.setuptools.dynamic.dependencies]
+file = [ "requirements.txt",]
+
+[tool.setuptools.dynamic.optional-dependencies.test]
+file = "dev-requirements.txt"

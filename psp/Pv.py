@@ -1,12 +1,12 @@
-from __future__ import print_function
-import time
-import warnings
 import threading
+import time
 import traceback
+import warnings
 
 import numpy as np
 
 import pyca
+
 from . import utils
 
 """
@@ -178,7 +178,7 @@ class Pv(pyca.capv):
 
         if self.count is None:
             try:
-                self.count = super(Pv, self).count()
+                self.count = super().count()
             except pyca.pyexc:
                 pass
 
@@ -225,12 +225,12 @@ class Pv(pyca.capv):
                 self.del_monitor_callback(id)
         if e is None:
             if DEBUG != 0:
-                logprint("%s monitoring %s %s" % (utils.now(), self.name,
-                                                  self.timestr()))
+                logprint("{} monitoring {} {}".format(
+                         utils.now(), self.name, self.timestr()))
                 logprint(self.value)
         else:
             logprint("%-30s %s" % (self.name, e))
-    
+
     def __rwaccess_handler(self, read_access_state, write_access_state):
         """
         Called during a read/write access change event
@@ -407,7 +407,7 @@ class Pv(pyca.capv):
             self.create_channel()
 
         except pyca.pyexc:
-            logprint('Channel for PV {:} already exists'.format(self.name))
+            logprint(f'Channel for PV {self.name} already exists')
             return self.isconnected
 
         if timeout is not None:
@@ -458,7 +458,7 @@ class Pv(pyca.capv):
         count : int, optional
             Subsection of waveform record to monitor. By default,
             :attr:`.count` is used
-         
+
         wait_for_init : bool, optional
             Whether to wait for an initial value to arrive for the PV before
             returning.  If False, the PV's value and metadata might not be
@@ -491,10 +491,10 @@ class Pv(pyca.capv):
         # The purpose of this step is to initialize the .value when we call
         # .monitor() in an interactive session.
         if wait_for_init:
-           try:
-               self.get()
-           except pyca.caexc:
-               pass
+            try:
+                self.get()
+            except pyca.caexc:
+                pass
 
         self.ismonitored = True
 
@@ -621,7 +621,7 @@ class Pv(pyca.capv):
         TODO : Add a put_complete which confirms the success of the function
         """
         if DEBUG != 0:
-            logprint("caput %s in %s\n" % (value, self.name))
+            logprint("caput {} in {}\n".format(value, self.name))
 
         if timeout:
             try:
@@ -789,8 +789,8 @@ class Pv(pyca.capv):
         condition = utils.all_condition(lambda: self.value == value)
         result = self.wait_condition(condition, timeout, True)
         if not result:
-            logprint("waiting for pv %s to become %s timed out" % (self.name,
-                                                                   value))
+            logprint("waiting for pv {} to become {} timed out".format(self.name,
+                                                                       value))
         return result
 
     def wait_for_range(self, low, high, timeout=60):

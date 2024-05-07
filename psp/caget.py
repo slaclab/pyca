@@ -2,9 +2,10 @@
 import sys
 import time
 
-import pyca
 from options import Options
 from Pv import Pv
+
+import pyca
 
 
 def caget(pvname):

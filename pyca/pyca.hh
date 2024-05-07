@@ -7,12 +7,12 @@ struct capv {
   PyObject* processor;  // user processor function
   PyObject* connect_cb; // connection callback
   PyObject* monitor_cb; // monitor callback
-  PyObject* rwaccess_cb;// access rights callback 
+  PyObject* rwaccess_cb;// access rights callback
   PyObject* getevt_cb;  // event callback
   PyObject* putevt_cb;  // event callback
   PyObject* simulated;  // None if real PV, otherwise just simulated.
   PyObject* use_numpy;  // True to use numpy array instead of tuple
-  chid cid;             // channel access ID  
+  chid cid;             // channel access ID
   char* getbuffer;      // buffer for received data
   unsigned getbufsiz;   // received data buffer size
   char* putbuffer;      // buffer for send data

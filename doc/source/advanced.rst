@@ -16,10 +16,10 @@ monitor comes in. While the PV is actively being monitored, the value attribute
 will be actively updated by an internal callback function. This mode of
 operation can either be specified at the time of object initialization or later
 by calling :meth:`monitor_start`. For example, here is a quick script that
-looks at a PV and checks one second later if the value changed 
+looks at a PV and checks one second later if the value changed
 
 .. code-block:: python
-    
+
     import time
     from psp import PV
 
@@ -38,7 +38,7 @@ moves on, but in the appending mode, each update is stored in the
 :attr:`.Pv.values`. This allows the user to quickly keep track of rapidly moving PV.
 
 .. code-block:: python
-    
+
     import time
     from psp import PV
 
@@ -54,7 +54,7 @@ The class even has some built-in functionality to return some basic statistics
 of the class with the :meth:`.Pv.monitor_get`. For most scalar values, this is
 a perfect way to monitor an EPICS channel, but for large arrays and images, it
 is prudent to not monitor for too long as it easy to put a large burden on
-system memory.   
+system memory.
 
 User-Defined Callbacks
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -66,7 +66,7 @@ should accept one argument, see the :meth:`.Pv.add_connection_callback` or
 arguement indicates. A quick example of this feature can be seen below:
 
 .. code-block:: python
-    
+
     def updated(e):
         print 'The PV has updated`
 
@@ -76,8 +76,8 @@ arguement indicates. A quick example of this feature can be seen below:
     cb_id  = mon_pv.add_monitor_callback(updated) #The function returns an id
                                                   #for the callback
 
-    >>> mon_pv.monitor_start()    
-    
+    >>> mon_pv.monitor_start()
+
     >>> mon_pv.put(5)
     'The PV has updated'
     >>> mon_pv.del_monitor_callback(cb_id) #Remove the callback
@@ -89,5 +89,3 @@ callbacks are kept in case you lose track of an id. While this example is
 trivial, it is easy to imagine how this can be quickly adapted to make complex
 control loops without the pain of creating threads to simultaneously watch PV
 values.
-    
-

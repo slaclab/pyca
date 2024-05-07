@@ -63,7 +63,7 @@ to see things like the EGU field, one call using :meth:`.Pv.get` with
 single call is usually enough for most applications. Here is an example:
 
 .. code-block:: python
-    
+
     import time
     from psp import PV
 

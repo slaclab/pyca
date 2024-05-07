@@ -49,7 +49,7 @@ void _pyca_put_np(void* npdata, T* buf)
 }
 
 // Copy python objects into channel access void* buffer
-template<class T> static inline 
+template<class T> static inline
 void _pyca_put_value(capv* pv, PyObject* pyvalue, T** buf, long count)
 {
   unsigned size = count*sizeof(T);
@@ -104,8 +104,8 @@ void _pyca_put_value(capv* pv, PyObject* pyvalue, T** buf, long count)
       *buf = buffer;
 }
 
-static const void* _pyca_put_buffer(capv* pv, 
-                                    PyObject* pyvalue, 
+static const void* _pyca_put_buffer(capv* pv,
+                                    PyObject* pyvalue,
                                     short &dbr_type, // We may change DBF_ENUM to DBF_STRING
                                     long count)
 {
