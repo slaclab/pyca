@@ -42,5 +42,5 @@ test:
 
 about:
   home: https://github.com/slaclab/pyca
-  licence: SLAC Open Licence
+  licence: SLAC Open License
   summary: Python Channel Access
