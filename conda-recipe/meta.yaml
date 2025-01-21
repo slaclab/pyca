@@ -1,11 +1,10 @@
 {% set package_name = "pyca" %}
 {% set import_name = "pyca" %}
-{% set version = load_file_regex(load_file=os.path.join(import_name, "_version.py"), regex_pattern=".*version = '(\S+)'").group(1) %}
-{% set EPICS = '3.14.12.6' %}
+{% set data = load_setup_py_data() %}
 
 package:
   name: {{ package_name }}
-  version: {{ version }}
+  version: {{ data.get('version') }}
 
 source:
   path: ..
@@ -14,33 +13,50 @@ build:
   number: 0
   noarch: python
   script: {{ PYTHON }} -m pip install . -vv
-
-
+  skip: true  # [win]
+  missing_dso_whitelist:
+    - '*/libca.*'
+    - '*/libCom.*'
 
 requirements:
   build:
-  - python {{ PY_VER }}*
-  - epics-base {{ EPICS }}*
-  - numpy {{ NPY_VER }}*
-  - setuptools_scm
-  - pip
+    - python >=3.9
+    - pip
+    - setuptools
+    - setuptools_scm
+  host:
+    - python >=3.9
+    - epicscorelibs
+    - numpy
+    - pip
+    - setuptools
+    - setuptools_dso
+    - setuptools_scm
   run:
-  - python {{ PY_VER }}*
-  - epics-base {{ EPICS }}*
-  - numpy {{ NPY_VER }}*
-
-
+    - python
+    - epicscorelibs
+    - numpy
 
 test:
   requires:
-  - pcaspy
+    - pcaspy
   imports:
-  - pyca
-  - psp
-
-
+    - pyca
+    - psp
 
 about:
   home: https://github.com/slaclab/pyca
-  licence: SLAC Open License
-  summary: Python Channel Access
+  license: LicenseRef-BSD-3-Clause-SLAC
+  license_family: BSD
+  license_file: LICENSE.md
+  summary: PyCA - lightweight bindings for Python applications to access EPICS PVs.
+
+  description: |
+    PyCA (Python Channel Access) is a module that offers lightweight
+    bindings for Python applications to access EPICS PVs. It acts as
+    a channel access client, much like pyepics. The intention of the 
+    module is to provide better performance for embedded applications,
+    rather than to provide an interactive interface. The most significant
+    gains will be found when monitoring large waveforms that need to be
+    processed before exposing them the Python layer.      
+  dev_url: https://github.com/slaclab/pyca
