@@ -20,8 +20,10 @@ build:
 
 requirements:
   build:
+    - epicscorelibs
     - python >=3.9
     - pip
+    - numpy
     - setuptools
     - setuptools_scm
   host:
