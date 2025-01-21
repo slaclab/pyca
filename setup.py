@@ -4,12 +4,9 @@ import numpy
 import platform
 from setuptools_dso import Extension, setup
 
-if (sys.version_info[1] >= 12):
-    from numpy import get_include
-    def get_numpy_include_dirs():
-        return [get_include()]
-else:
-    from numpy.distutils.misc_util import get_numpy_include_dirs
+from numpy import get_include
+def get_numpy_include_dirs():
+    return [get_include()]
 
 import epicscorelibs.path
 import epicscorelibs.version

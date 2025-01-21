@@ -1,6 +1,6 @@
 [build-system]
 build-backend = "setuptools.build_meta"
-requires = [ "setuptools>=45", "setuptools_scm[toml]>=6.2", "setuptools_dso", "numpy", "epicscorelibs"]
+requires = [ "setuptools>=45", "setuptools_scm[toml]>=6.2", "setuptools_dso", "numpy>1.23", "epicscorelibs"]
 
 [project]
 classifiers = [ "Development Status :: 2 - Pre-Alpha", "Natural Language :: English", "Programming Language :: Python :: 3",]
