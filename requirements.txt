@@ -1,1 +1,2 @@
-numpy
+epicscorelibs
+numpy>1.23

@@ -1,4 +1,6 @@
 #include <Python.h>
+// We apparently use deprecated API, but I can't find which bits to update
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
 #include <stdio.h>
 #include <structmember.h>
@@ -785,7 +787,7 @@ extern "C" {
         Py_INCREF(pyca_caexc);
         PyModule_AddObject(module, "caexc", pyca_caexc);
 
-        PyEval_InitThreads();
+        // PyEval_InitThreads();
         if (!has_proc_context()) {
             int result = ca_context_create(ca_enable_preemptive_callback);
             if (result != ECA_NORMAL) {

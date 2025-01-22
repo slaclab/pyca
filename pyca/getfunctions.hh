@@ -1,4 +1,5 @@
 #include "p3compat.h"
+// #include "npy_2_compat.h"
 // Channel access GET template functions
 static inline PyObject* _pyca_get(const dbr_string_t value)
 {
@@ -107,7 +108,8 @@ PyObject* _pyca_get_value(capv* pv, const T* dbrv, long count)
         npy_intp dims[1] = {count};
         int typenum = _numpy_array_type(&(dbrv->value));
         PyObject* nparray = PyArray_EMPTY(1, dims, typenum, 0);
-        memcpy(PyArray_DATA(nparray), &(dbrv->value), count*sizeof(dbrv->value));
+        PyArrayObject *arr = (PyArrayObject *)PyArray_FROM_O(nparray); 
+        memcpy(PyArray_DATA(arr), &(dbrv->value), count*sizeof(dbrv->value));
         return nparray;
       } else {
         PyObject* pytup = PyTuple_New(count);

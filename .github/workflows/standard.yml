@@ -1,0 +1,64 @@
+name: PCDS Standard Testing
+
+on:
+  push:
+  pull_request:
+  release:
+    types:
+      - created
+
+jobs:
+  pre-commit:
+    name: "pre-commit checks"
+    uses: pcdshub/pcds-ci-helpers/.github/workflows/pre-commit.yml@master
+    with:
+      args: "--all-files"
+
+  conda-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - python-version: "3.9"
+          deploy-on-success: true
+        - python-version: "3.10"
+        - python-version: "3.11"
+          experimental: true
+        - python-version: "3.12"
+          experimental: true
+
+    name: "Conda"
+    uses: pcdshub/pcds-ci-helpers/.github/workflows/python-conda-test.yml@master
+    secrets: inherit
+    with:
+      package-name: "pyca"
+      python-version: ${{ matrix.python-version }}
+      experimental: ${{ matrix.experimental || false }}
+      deploy-on-success: ${{ matrix.deploy-on-success || false }}
+      testing-extras: ""
+      system-packages: ""
+      use-setuptools-scm: true
+
+  pip-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - python-version: "3.9"
+          deploy-on-success: true
+        - python-version: "3.10"
+        - python-version: "3.11"
+          experimental: true
+        - python-version: "3.12"
+          experimental: true
+
+    name: "Pip"
+    uses: pcdshub/pcds-ci-helpers/.github/workflows/python-pip-test.yml@master
+    secrets: inherit
+    with:
+      package-name: "pyca"
+      python-version: ${{ matrix.python-version }}
+      experimental: ${{ matrix.experimental || false }}
+      deploy-on-success: ${{ matrix.deploy-on-success || false }}
+      system-packages: ""
+      testing-extras: ""
