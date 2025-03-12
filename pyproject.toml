@@ -7,7 +7,7 @@ classifiers = [ "Development Status :: 2 - Pre-Alpha", "Natural Language :: Engl
 description = "python channel access library"
 dynamic = [ "version", "readme", "dependencies", "optional-dependencies",]
 keywords = []
-name = "pyca"
+name = "pyca_epics"
 requires-python = ">=3.9"
 [[project.authors]]
 name = "SLAC National Accelerator Laboratory"
