@@ -77,7 +77,7 @@ jobs:
         uses: pypa/cibuildwheel@v2.23.2
         env:
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
-          CIBW_BEFORE_BUILD: pip install setuptools_dso epicscorelibs
+          CIBW_BEFORE_BUILD: pip install setuptools_dso epicscorelibs pyepics
         with:
           package-dir: .
           output-dir: wheelhouse
