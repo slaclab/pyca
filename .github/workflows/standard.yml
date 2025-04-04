@@ -68,16 +68,16 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, macos-13, macos-latest]
+        os: [ubuntu-latest]
 
     steps:
       - uses: actions/checkout@v4
       
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.23.2
-        # env:
-        #   CIBW_SOME_OPTION: value
-        #   ...
+        env:
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
+          CIBW_BEFORE_BUILD: pip install setuptools_dso epicscorelibs
         with:
           package-dir: .
           output-dir: wheelhouse
