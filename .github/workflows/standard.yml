@@ -36,7 +36,7 @@ jobs:
       experimental: ${{ matrix.experimental || false }}
       deploy-on-success: ${{ matrix.deploy-on-success || false }}
       testing-extras: ""
-      system-packages: "numpy"
+      system-packages: ""
       use-setuptools-scm: true
 
   pip-test:
