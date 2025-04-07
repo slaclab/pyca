@@ -81,12 +81,6 @@ jobs:
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
           CIBW_BEFORE_BUILD_LINUX: >
             pip install setuptools_dso epicscorelibs &&
-            export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(python scripts/get_library_paths.py) &&
-            env | grep LIBRARY
-          CIBW_BEFORE_ALL_LINUX: >
-            pip install setuptools_dso epicscorelibs &&
-            export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(python scripts/get_library_paths.py) &&
-            env | grep LIBRARY
           CIBW_REPAIR_WHEEL_COMMAND: > 
             export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(python scripts/get_library_paths.py) &&
             env | grep LIBRARY &&
