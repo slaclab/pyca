@@ -88,6 +88,7 @@ jobs:
             export LD_LIBRARY_PATH=$(python scripts/get_library_paths.py) &&
             env | grep LIBRARY
           CIBW_REPAIR_WHEEL_COMMAND: > 
+            export LD_LIBRARY_PATH=$(python scripts/get_library_paths.py) &&
             env | grep LIBRARY &&
             auditwheel repair -w {dest_dir} {wheel}
             
