@@ -68,7 +68,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-14, windows-latest, ubuntu-latest]
+        os: [ubuntu-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -79,9 +79,14 @@ jobs:
           CIBW_SKIP: pp*
           CIBW_BUILD_FRONTEND: "pip; args: --no-build-isolation"
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
-          CIBW_BEFORE_BUILD: >
-            pip install setuptools_dso epicscorelibs pyepics &&
-            export LD_LIBRARY_PATH=$(python scripts/get_library_paths.py)
+          CIBW_BEFORE_ALL_LINUX: >
+            pip install setuptools_dso epicscorelibs &&
+            export LD_LIBRARY_PATH=$(python scripts/get_library_paths.py) &&
+            env | grep LIBRARY
+          CIBW_REPAIR_WHEEL_COMMAND: > 
+            env | grep LIBRARY &&
+            auditwheel repair -w {dest_dir} {wheel}
+            
         with:
           package-dir: .
           output-dir: wheelhouse
