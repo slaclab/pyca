@@ -1,4 +1,4 @@
-name: PCDS Standard Testing
+name: Build Wheels
 
 on:
   push:
