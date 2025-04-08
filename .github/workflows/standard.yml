@@ -72,7 +72,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      
+        with:
+          fetch-depth: 0
+
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.23.2
         env:
@@ -81,11 +83,11 @@ jobs:
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
           CIBW_BEFORE_BUILD: >
             pip install setuptools_dso epicscorelibs
-          CIBW_REPAIR_WHEEL_COMMAND_LINUX: > 
+          CIBW_REPAIR_WHEEL_COMMAND_LINUX: >
             export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(python scripts/get_library_paths.py) &&
             env | grep LIBRARY &&
             auditwheel repair -w {dest_dir} {wheel}
-          CIBW_REPAIR_WHEEL_COMMAND_MACOS: > 
+          CIBW_REPAIR_WHEEL_COMMAND_MACOS: >
             export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:$(python scripts/get_library_paths.py) &&
             env | grep LIBRARY &&
             delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel}
@@ -93,7 +95,7 @@ jobs:
             echo "wheel installed" &&
             python -c "import pyca; print(pyca)" &&
             python -c "import psp; print(psp)"
-            
+
         with:
           package-dir: .
           output-dir: wheelhouse
