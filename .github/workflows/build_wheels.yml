@@ -11,7 +11,7 @@ jobs:
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
     # only build / deploy wheels on tag event
-    # if: startsWith(github.event.ref, 'refs/tags')
+    if: startsWith(github.event.ref, 'refs/tags')
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -54,13 +54,13 @@ jobs:
           name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
 
-    #   - name: PyPI deployment
-    #     env:
-    #       TWINE_USERNAME: __token__
-    #       TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
-    #     run: |
-    #       if [ -z "$TWINE_PASSWORD" ]; then
-    #         echo "# No PYPI_TOKEN secret in job!" | tee -a "$GITHUB_STEP_SUMMARY"
-    #         exit 1
-    #       fi
-    #       twine upload --verbose dist/*
+      - name: PyPI deployment
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        run: |
+          if [ -z "$TWINE_PASSWORD" ]; then
+            echo "# No PYPI_TOKEN secret in job!" | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          twine upload --verbose dist/*
