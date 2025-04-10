@@ -1,0 +1,66 @@
+name: Build Wheels
+
+on:
+  push:
+  pull_request:
+  release:
+    types:
+      - created
+
+jobs:
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    # only build / deploy wheels on tag event
+    if: startsWith(github.event.ref, 'refs/tags')
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-14]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.23.2
+        env:
+          CIBW_SKIP: pp*
+          CIBW_BUILD_FRONTEND: "build; args: --no-isolation"
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
+          CIBW_BEFORE_BUILD: >
+            pip install "setuptools_dso" "epicscorelibs" "setuptools_scm[toml]>=6.2" "numpy>1.23" "setuptools>=45"
+          CIBW_REPAIR_WHEEL_COMMAND_LINUX: >
+            export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(python scripts/get_library_paths.py) &&
+            env | grep LIBRARY &&
+            auditwheel repair -w {dest_dir} {wheel}
+          CIBW_REPAIR_WHEEL_COMMAND_MACOS: >
+            export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:$(python scripts/get_library_paths.py) &&
+            env | grep LIBRARY &&
+            delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel}
+          CIBW_TEST_COMMAND: >
+            echo "wheel installed" &&
+            python -c "import pyca; print(pyca)" &&
+            python -c "import psp; print(psp)"
+
+        with:
+          package-dir: .
+          output-dir: wheelhouse
+          config-file: "{package}/pyproject.toml"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+          path: ./wheelhouse/*.whl
+
+      - name: PyPI deployment
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        run: |
+          if [ -z "$TWINE_PASSWORD" ]; then
+            echo "# No PYPI_TOKEN secret in job!" | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          twine upload --verbose dist/*

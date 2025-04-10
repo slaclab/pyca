@@ -1,10 +1,9 @@
 {% set package_name = "pyca" %}
 {% set import_name = "pyca" %}
-{% set data = load_setup_py_data() %}
 
 package:
   name: {{ package_name }}
-  version: {{ data.get('version') }}
+  version: "3.3.1"
 
 source:
   path: ..
