@@ -66,7 +66,7 @@ void _pyca_put_value(capv* pv, PyObject* pyvalue, T** buf, long count)
         _pyca_put(pyval, buffer);
       } else if (PyArray_Check(pyvalue)) {
         // Convert to array
-        PyArrayObject *arr = (PyArrayObject *)PyArray_FROM_O(pyvalue); 
+        PyArrayObject *arr = (PyArrayObject *)PyArray_FROM_O(pyvalue);
         char* npdata = static_cast<char*>(PyArray_GETPTR1(arr, 0));
         if (PyArray_IsPythonScalar(pyvalue)) {
           PyObject* pyval = PyArray_GETITEM(arr, npdata);
@@ -88,7 +88,7 @@ void _pyca_put_value(capv* pv, PyObject* pyvalue, T** buf, long count)
         _pyca_put(pyval, buffer+i);
       }
     } else if (PyArray_Check(pyvalue)) {
-      PyArrayObject *arr2 = (PyArrayObject *)PyArray_FROM_O(pyvalue); 
+      PyArrayObject *arr2 = (PyArrayObject *)PyArray_FROM_O(pyvalue);
       bool py_type = PyArray_IsPythonScalar(arr2);
       for (long i=0; i<count; i++) {
         char* npdata = static_cast<char*>(PyArray_GETPTR1(arr2, i));
