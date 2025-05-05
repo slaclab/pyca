@@ -108,7 +108,7 @@ PyObject* _pyca_get_value(capv* pv, const T* dbrv, long count)
         npy_intp dims[1] = {count};
         int typenum = _numpy_array_type(&(dbrv->value));
         PyObject* nparray = PyArray_EMPTY(1, dims, typenum, 0);
-        PyArrayObject *arr = (PyArrayObject *)PyArray_FROM_O(nparray); 
+        PyArrayObject *arr = (PyArrayObject *)PyArray_FROM_O(nparray);
         memcpy(PyArray_DATA(arr), &(dbrv->value), count*sizeof(dbrv->value));
         return nparray;
       } else {
